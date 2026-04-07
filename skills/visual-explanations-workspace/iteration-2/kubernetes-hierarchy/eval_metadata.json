@@ -1,0 +1,10 @@
+{
+  "eval_id": 3,
+  "eval_name": "kubernetes-hierarchy",
+  "prompt": "Kubernetes の Deployment / ReplicaSet / Pod / Container の関係を説明している文章が長すぎます。図と短い表で、親子関係と役割の違いがすぐ分かるようにリライトしてください。",
+  "assertions": [
+    "Markdown に Mermaid コードブロックが含まれる",
+    "Markdown の表が含まれる",
+    "Deployment・ReplicaSet・Pod・Container の4語がすべて含まれる"
+  ]
+}

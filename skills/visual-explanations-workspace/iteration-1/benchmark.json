@@ -1,0 +1,272 @@
+{
+  "metadata": {
+    "skill_name": "visual-explanations",
+    "skill_path": "/Users/yoda/forProgramming/DK/skills/visual-explanations",
+    "executor_model": "fast-subagent",
+    "analyzer_model": "inline",
+    "timestamp": "2026-04-07T21:22:47.266429+00:00",
+    "evals_run": [
+      1,
+      2,
+      3
+    ],
+    "runs_per_configuration": 1
+  },
+  "runs": [
+    {
+      "eval_id": 1,
+      "eval_name": "vm-container-comparison",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 2998,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Markdown に Mermaid コードブロックが含まれる",
+          "passed": true,
+          "evidence": "Found ```mermaid block."
+        },
+        {
+          "text": "本文に共通点と差分の両方への言及がある",
+          "passed": true,
+          "evidence": "common=True, difference=True"
+        },
+        {
+          "text": "図または補足で読み順（上から下 / 左から右など）が示されている",
+          "passed": true,
+          "evidence": "Found reading-order guidance."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 1,
+      "eval_name": "vm-container-comparison",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 1986,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Markdown に Mermaid コードブロックが含まれる",
+          "passed": true,
+          "evidence": "Found ```mermaid block."
+        },
+        {
+          "text": "本文に共通点と差分の両方への言及がある",
+          "passed": true,
+          "evidence": "common=True, difference=True"
+        },
+        {
+          "text": "図または補足で読み順（上から下 / 左から右など）が示されている",
+          "passed": true,
+          "evidence": "Found reading-order guidance."
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "oauth-login-flow",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 2295,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Markdown に Mermaid コードブロックが含まれる",
+          "passed": true,
+          "evidence": "Found ```mermaid block."
+        },
+        {
+          "text": "認可コードとアクセストークンの両方が本文または図に現れる",
+          "passed": true,
+          "evidence": "auth_code=True, access_token=True"
+        },
+        {
+          "text": "ブラウザ・アプリ・認可サーバ・API サーバの4者が説明に含まれる",
+          "passed": true,
+          "evidence": "ブラウザ=True, アプリ=True, 認可サーバ=True, API サーバ=True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 2,
+      "eval_name": "oauth-login-flow",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 2607,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Markdown に Mermaid コードブロックが含まれる",
+          "passed": true,
+          "evidence": "Found ```mermaid block."
+        },
+        {
+          "text": "認可コードとアクセストークンの両方が本文または図に現れる",
+          "passed": true,
+          "evidence": "auth_code=True, access_token=True"
+        },
+        {
+          "text": "ブラウザ・アプリ・認可サーバ・API サーバの4者が説明に含まれる",
+          "passed": true,
+          "evidence": "ブラウザ=True, アプリ=True, 認可サーバ=True, API サーバ=True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "kubernetes-hierarchy",
+      "configuration": "with_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 1243,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Markdown に Mermaid コードブロックが含まれる",
+          "passed": true,
+          "evidence": "Found ```mermaid block."
+        },
+        {
+          "text": "Markdown の表が含まれる",
+          "passed": true,
+          "evidence": "Found markdown table syntax."
+        },
+        {
+          "text": "Deployment・ReplicaSet・Pod・Container の4語がすべて含まれる",
+          "passed": true,
+          "evidence": "Deployment=True, ReplicaSet=True, Pod=True, Container=True"
+        }
+      ],
+      "notes": []
+    },
+    {
+      "eval_id": 3,
+      "eval_name": "kubernetes-hierarchy",
+      "configuration": "without_skill",
+      "run_number": 1,
+      "result": {
+        "pass_rate": 1.0,
+        "passed": 3,
+        "failed": 0,
+        "total": 3,
+        "time_seconds": 0.0,
+        "tokens": 1155,
+        "tool_calls": 0,
+        "errors": 0
+      },
+      "expectations": [
+        {
+          "text": "Markdown に Mermaid コードブロックが含まれる",
+          "passed": true,
+          "evidence": "Found ```mermaid block."
+        },
+        {
+          "text": "Markdown の表が含まれる",
+          "passed": true,
+          "evidence": "Found markdown table syntax."
+        },
+        {
+          "text": "Deployment・ReplicaSet・Pod・Container の4語がすべて含まれる",
+          "passed": true,
+          "evidence": "Deployment=True, ReplicaSet=True, Pod=True, Container=True"
+        }
+      ],
+      "notes": []
+    }
+  ],
+  "run_summary": {
+    "with_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 2178.6667,
+        "stddev": 883.2646,
+        "min": 1243,
+        "max": 2998
+      }
+    },
+    "without_skill": {
+      "pass_rate": {
+        "mean": 1.0,
+        "stddev": 0.0,
+        "min": 1.0,
+        "max": 1.0
+      },
+      "time_seconds": {
+        "mean": 0.0,
+        "stddev": 0.0,
+        "min": 0.0,
+        "max": 0.0
+      },
+      "tokens": {
+        "mean": 1916,
+        "stddev": 728.5266,
+        "min": 1155,
+        "max": 2607
+      }
+    },
+    "delta": {
+      "pass_rate": "+0.00",
+      "time_seconds": "+0.0",
+      "tokens": "+263"
+    }
+  },
+  "notes": [
+    "Pass-rate only checks presence/structure level assertions; human review should decide whether the diagrams are genuinely easier to understand.",
+    "Timing and token counts were not recoverable from background subagent notifications in this run, so time_seconds is 0 and tokens uses output character count as a placeholder."
+  ]
+}

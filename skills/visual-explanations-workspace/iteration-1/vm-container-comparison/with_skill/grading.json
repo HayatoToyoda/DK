@@ -1,0 +1,47 @@
+{
+  "expectations": [
+    {
+      "text": "Markdown に Mermaid コードブロックが含まれる",
+      "passed": true,
+      "evidence": "Found ```mermaid block."
+    },
+    {
+      "text": "本文に共通点と差分の両方への言及がある",
+      "passed": true,
+      "evidence": "common=True, difference=True"
+    },
+    {
+      "text": "図または補足で読み順（上から下 / 左から右など）が示されている",
+      "passed": true,
+      "evidence": "Found reading-order guidance."
+    }
+  ],
+  "summary": {
+    "passed": 3,
+    "failed": 0,
+    "total": 3,
+    "pass_rate": 1.0
+  },
+  "execution_metrics": {
+    "tool_calls": {},
+    "total_tool_calls": 0,
+    "total_steps": 0,
+    "errors_encountered": 0,
+    "output_chars": 2998,
+    "transcript_chars": 0
+  },
+  "timing": {
+    "executor_duration_seconds": 0.0,
+    "grader_duration_seconds": 0.0,
+    "total_duration_seconds": 0.0
+  },
+  "claims": [],
+  "user_notes_summary": {
+    "uncertainties": [],
+    "needs_review": [],
+    "workarounds": []
+  },
+  "eval_feedback": {
+    "overall": "Timing/tokens were not recoverable from the background subagent transcripts in this run, so benchmark comparisons focus on pass-rate and qualitative output review."
+  }
+}

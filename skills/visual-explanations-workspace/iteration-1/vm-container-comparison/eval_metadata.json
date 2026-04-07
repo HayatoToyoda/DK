@@ -1,0 +1,10 @@
+{
+  "eval_id": 1,
+  "eval_name": "vm-container-comparison",
+  "prompt": "foundation/01-what-is-docker/README.md の VM とコンテナの説明が頭に入りにくいです。Mermaid と短い補足文で、共通点と差分が一目で分かるように直してください。図の重なりにも気をつけてください。",
+  "assertions": [
+    "Markdown に Mermaid コードブロックが含まれる",
+    "本文に共通点と差分の両方への言及がある",
+    "図または補足で読み順（上から下 / 左から右など）が示されている"
+  ]
+}

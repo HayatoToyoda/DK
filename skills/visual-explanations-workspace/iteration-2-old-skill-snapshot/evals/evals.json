@@ -1,0 +1,40 @@
+{
+  "skill_name": "visual-explanations",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "foundation/01-what-is-docker/README.md の VM とコンテナの説明が頭に入りにくいです。Mermaid と短い補足文で、共通点と差分が一目で分かるように直してください。図の重なりにも気をつけてください。",
+      "expected_output": "比較図の前後に読み方があり、共通の入口・分かれ目・共通の出口が分かる Mermaid か、同等以上に分かりやすい別の視覚化が入る。",
+      "files": [
+        "foundation/01-what-is-docker/README.md"
+      ],
+      "assertions": [
+        "Markdown に Mermaid コードブロックが含まれる",
+        "本文に共通点と差分の両方への言及がある",
+        "図または補足で読み順（上から下 / 左から右など）が示されている"
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "OAuth のログインフローを初心者向けに説明する README を書いています。ブラウザ、アプリ、認可サーバ、API サーバのやりとりを Mermaid で見せつつ、どこで認可コードとアクセストークンが登場するかも分かるようにしてください。",
+      "expected_output": "登場人物が整理されたシーケンス図か同等の図が入り、トークンや認可コードの流れが誤解なく説明される。",
+      "files": [],
+      "assertions": [
+        "Markdown に Mermaid コードブロックが含まれる",
+        "認可コードとアクセストークンの両方が本文または図に現れる",
+        "ブラウザ・アプリ・認可サーバ・API サーバの4者が説明に含まれる"
+      ]
+    },
+    {
+      "id": 3,
+      "prompt": "Kubernetes の Deployment / ReplicaSet / Pod / Container の関係を説明している文章が長すぎます。図と短い表で、親子関係と役割の違いがすぐ分かるようにリライトしてください。",
+      "expected_output": "階層や包含関係が図で見え、表または短い補足で役割の差が整理される。図が大きすぎる場合は複数に分割される。",
+      "files": [],
+      "assertions": [
+        "Markdown に Mermaid コードブロックが含まれる",
+        "Markdown の表が含まれる",
+        "Deployment・ReplicaSet・Pod・Container の4語がすべて含まれる"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Eval Review</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js" integrity="sha384-EnyY0/GSHQGSxSgMwaIPzSESbqoOLSexfnSMN2AP+39Ckmn92stwABZynq1JyzdT" crossorigin="anonymous"></script>
+  <style>
+    :root {
+      --bg: #faf9f5;
+      --surface: #ffffff;
+      --border: #e8e6dc;
+      --text: #141413;
+      --text-muted: #b0aea5;
+      --accent: #d97757;
+      --accent-hover: #c4613f;
+      --green: #788c5d;
+      --green-bg: #eef2e8;
+      --red: #c44;
+      --red-bg: #fceaea;
+      --header-bg: #141413;
+      --header-text: #faf9f5;
+      --radius: 6px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Lora', Georgia, serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ---- Header ---- */
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .header h1 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+    .header .instructions {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      margin-top: 0.25rem;
+    }
+    .header .progress {
+      font-size: 0.875rem;
+      opacity: 0.8;
+      text-align: right;
+    }
+
+    /* ---- Main content ---- */
+    .main {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* ---- Sections ---- */
+    .section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      flex-shrink: 0;
+    }
+    .section-header {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .section-body {
+      padding: 1rem;
+    }
+
+    /* ---- Config badge ---- */
+    .config-badge {
+      display: inline-block;
+      padding: 0.2rem 0.625rem;
+      border-radius: 9999px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-left: 0.75rem;
+      vertical-align: middle;
+    }
+    .config-badge.config-primary {
+      background: rgba(33, 150, 243, 0.12);
+      color: #1976d2;
+    }
+    .config-badge.config-baseline {
+      background: rgba(255, 193, 7, 0.15);
+      color: #f57f17;
+    }
+
+    /* ---- Prompt ---- */
+    .prompt-text {
+      white-space: pre-wrap;
+      font-size: 0.9375rem;
+      line-height: 1.6;
+    }
+
+    /* ---- Outputs ---- */
+    .output-file {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .output-file + .output-file {
+      margin-top: 1rem;
+    }
+    .output-file-header {
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .output-file-header .dl-btn {
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-decoration: none;
+      cursor: pointer;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-weight: 500;
+      opacity: 0.8;
+    }
+    .output-file-header .dl-btn:hover {
+      opacity: 1;
+      text-decoration: underline;
+    }
+    .output-file-content {
+      padding: 0.75rem;
+      overflow-x: auto;
+    }
+    .output-file-content pre {
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'SF Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+    }
+    .output-file-content img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+    .output-file-content iframe {
+      width: 100%;
+      height: 600px;
+      border: none;
+    }
+    .output-file-content table {
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      width: 100%;
+    }
+    .output-file-content table td,
+    .output-file-content table th {
+      border: 1px solid var(--border);
+      padding: 0.375rem 0.5rem;
+      text-align: left;
+    }
+    .output-file-content table th {
+      background: var(--bg);
+      font-weight: 600;
+    }
+    .output-file-content .download-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--accent);
+      text-decoration: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+    }
+    .output-file-content .download-link:hover {
+      background: var(--border);
+    }
+    .empty-state {
+      color: var(--text-muted);
+      font-style: italic;
+      padding: 2rem;
+      text-align: center;
+    }
+
+    /* ---- Feedback ---- */
+    .prev-feedback {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.625rem 0.75rem;
+      margin-top: 0.75rem;
+      font-size: 0.8125rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .prev-feedback-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.25rem;
+      color: var(--text-muted);
+    }
+    .feedback-textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: inherit;
+      font-size: 0.9375rem;
+      line-height: 1.5;
+      resize: vertical;
+      color: var(--text);
+    }
+    .feedback-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    .feedback-status {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      min-height: 1.1em;
+    }
+
+    /* ---- Grades (collapsible) ---- */
+    .grades-toggle {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    .grades-toggle:hover {
+      color: var(--accent);
+    }
+    .grades-toggle .arrow {
+      margin-right: 0.5rem;
+      transition: transform 0.15s;
+      font-size: 0.75rem;
+    }
+    .grades-toggle .arrow.open {
+      transform: rotate(90deg);
+    }
+    .grades-content {
+      display: none;
+      margin-top: 0.75rem;
+    }
+    .grades-content.open {
+      display: block;
+    }
+    .grades-summary {
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .grade-badge {
+      display: inline-block;
+      padding: 0.125rem 0.5rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    .grade-pass { background: var(--green-bg); color: var(--green); }
+    .grade-fail { background: var(--red-bg); color: var(--red); }
+    .assertion-list {
+      list-style: none;
+    }
+    .assertion-item {
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8125rem;
+    }
+    .assertion-item:last-child { border-bottom: none; }
+    .assertion-status {
+      font-weight: 600;
+      margin-right: 0.5rem;
+    }
+    .assertion-status.pass { color: var(--green); }
+    .assertion-status.fail { color: var(--red); }
+    .assertion-evidence {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      padding-left: 1.5rem;
+    }
+
+    /* ---- View tabs ---- */
+    .view-tabs {
+      display: flex;
+      gap: 0;
+      padding: 0 2rem;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+    .view-tab {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.625rem 1.25rem;
+      font-size: 0.8125rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: none;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.15s;
+    }
+    .view-tab:hover { color: var(--text); }
+    .view-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .view-panel { display: none; }
+    .view-panel.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+
+    /* ---- Benchmark view ---- */
+    .benchmark-view {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .benchmark-table {
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 0.8125rem;
+      width: 100%;
+      margin-bottom: 1.5rem;
+    }
+    .benchmark-table th, .benchmark-table td {
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      border: 1px solid var(--border);
+    }
+    .benchmark-table th {
+      font-family: 'Poppins', sans-serif;
+      background: var(--header-bg);
+      color: var(--header-text);
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .benchmark-table tr:hover { background: var(--bg); }
+    .benchmark-table tr.benchmark-row-with { background: rgba(33, 150, 243, 0.06); }
+    .benchmark-table tr.benchmark-row-without { background: rgba(255, 193, 7, 0.06); }
+    .benchmark-table tr.benchmark-row-with:hover { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-without:hover { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-table tr.benchmark-row-avg { font-weight: 600; border-top: 2px solid var(--border); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-with { background: rgba(33, 150, 243, 0.12); }
+    .benchmark-table tr.benchmark-row-avg.benchmark-row-without { background: rgba(255, 193, 7, 0.12); }
+    .benchmark-delta-positive { color: var(--green); font-weight: 600; }
+    .benchmark-delta-negative { color: var(--red); font-weight: 600; }
+    .benchmark-notes {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+    }
+    .benchmark-notes h3 {
+      font-family: 'Poppins', sans-serif;
+      font-size: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+    .benchmark-notes ul {
+      list-style: disc;
+      padding-left: 1.25rem;
+    }
+    .benchmark-notes li {
+      font-size: 0.8125rem;
+      line-height: 1.6;
+      margin-bottom: 0.375rem;
+    }
+    .benchmark-empty {
+      color: var(--text-muted);
+      font-style: italic;
+      text-align: center;
+      padding: 3rem;
+    }
+
+    /* ---- Navigation ---- */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .nav-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .done-btn {
+      font-family: 'Poppins', sans-serif;
+      padding: 0.5rem 1.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .done-btn:hover {
+      background: var(--bg);
+      border-color: var(--text-muted);
+    }
+    .done-btn.ready {
+      border: none;
+      background: var(--accent);
+      color: white;
+      font-weight: 600;
+    }
+    .done-btn.ready:hover {
+      background: var(--accent-hover);
+    }
+    /* ---- Done overlay ---- */
+    .done-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    .done-overlay.visible {
+      display: flex;
+    }
+    .done-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 2rem 3rem;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+    }
+    .done-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .done-card p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .done-card .btn-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+    }
+    .done-card button {
+      padding: 0.5rem 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+    .done-card button:hover {
+      background: var(--bg);
+    }
+    /* ---- Toast ---- */
+    .toast {
+      position: fixed;
+      bottom: 5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0.625rem 1.25rem;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      pointer-events: none;
+      z-index: 200;
+    }
+    .toast.visible {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div id="app" style="height:100vh; display:flex; flex-direction:column;">
+    <div class="header">
+      <div>
+        <h1>Eval Review: <span id="skill-name"></span></h1>
+        <div class="instructions">Review each output and leave feedback below. Navigate with arrow keys or buttons. When done, copy feedback and paste into Claude Code.</div>
+      </div>
+      <div class="progress" id="progress"></div>
+    </div>
+
+    <!-- View tabs (only shown when benchmark data exists) -->
+    <div class="view-tabs" id="view-tabs" style="display:none;">
+      <button class="view-tab active" onclick="switchView('outputs')">Outputs</button>
+      <button class="view-tab" onclick="switchView('benchmark')">Benchmark</button>
+    </div>
+
+    <!-- Outputs panel (qualitative review) -->
+    <div class="view-panel active" id="panel-outputs">
+    <div class="main">
+      <!-- Prompt -->
+      <div class="section">
+        <div class="section-header">Prompt <span class="config-badge" id="config-badge" style="display:none;"></span></div>
+        <div class="section-body">
+          <div class="prompt-text" id="prompt-text"></div>
+        </div>
+      </div>
+
+      <!-- Outputs -->
+      <div class="section">
+        <div class="section-header">Output</div>
+        <div class="section-body" id="outputs-body">
+          <div class="empty-state">No output files found</div>
+        </div>
+      </div>
+
+      <!-- Previous Output (collapsible) -->
+      <div class="section" id="prev-outputs-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="togglePrevOutputs()">
+            <span class="arrow" id="prev-outputs-arrow">&#9654;</span>
+            Previous Output
+          </div>
+        </div>
+        <div class="grades-content" id="prev-outputs-content"></div>
+      </div>
+
+      <!-- Grades (collapsible) -->
+      <div class="section" id="grades-section" style="display:none;">
+        <div class="section-header">
+          <div class="grades-toggle" onclick="toggleGrades()">
+            <span class="arrow" id="grades-arrow">&#9654;</span>
+            Formal Grades
+          </div>
+        </div>
+        <div class="grades-content" id="grades-content"></div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="section">
+        <div class="section-header">Your Feedback</div>
+        <div class="section-body">
+          <textarea
+            class="feedback-textarea"
+            id="feedback"
+            placeholder="What do you think of this output? Any issues, suggestions, or things that look great?"
+          ></textarea>
+          <div class="feedback-status" id="feedback-status"></div>
+          <div class="prev-feedback" id="prev-feedback" style="display:none;">
+            <div class="prev-feedback-label">Previous feedback</div>
+            <div id="prev-feedback-text"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="nav" id="outputs-nav">
+      <button class="nav-btn" id="prev-btn" onclick="navigate(-1)">&#8592; Previous</button>
+      <button class="done-btn" id="done-btn" onclick="showDoneDialog()">Submit All Reviews</button>
+      <button class="nav-btn" id="next-btn" onclick="navigate(1)">Next &#8594;</button>
+    </div>
+    </div><!-- end panel-outputs -->
+
+    <!-- Benchmark panel (quantitative stats) -->
+    <div class="view-panel" id="panel-benchmark">
+      <div class="benchmark-view" id="benchmark-content">
+        <div class="benchmark-empty">No benchmark data available. Run a benchmark to see quantitative results here.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Done overlay -->
+  <div class="done-overlay" id="done-overlay">
+    <div class="done-card">
+      <h2>Review Complete</h2>
+      <p>Your feedback has been saved. Go back to your Claude Code session and tell Claude you're done reviewing.</p>
+      <div class="btn-row">
+        <button onclick="closeDoneDialog()">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ---- Embedded data (injected by generate_review.py) ----
+    const EMBEDDED_DATA = {"skill_name": "visual-explanations", "runs": [{"id": "vm-container-comparison-old_skill", "prompt": "foundation/01-what-is-docker/README.md \u306e VM \u3068\u30b3\u30f3\u30c6\u30ca\u306e\u8aac\u660e\u304c\u982d\u306b\u5165\u308a\u306b\u304f\u3044\u3067\u3059\u3002Mermaid \u3068\u77ed\u3044\u88dc\u8db3\u6587\u3067\u3001\u5171\u901a\u70b9\u3068\u5dee\u5206\u304c\u4e00\u76ee\u3067\u5206\u304b\u308b\u3088\u3046\u306b\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u56f3\u306e\u91cd\u306a\u308a\u306b\u3082\u6c17\u3092\u3064\u3051\u3066\u304f\u3060\u3055\u3044\u3002", "eval_id": 1, "outputs": [{"name": "answer.md", "type": "text", "content": "### \u30b3\u30f3\u30c6\u30ca vs \u4eee\u60f3\u30de\u30b7\u30f3\uff08VM\uff09\n\n| | \u30b3\u30f3\u30c6\u30ca | \u4eee\u60f3\u30de\u30b7\u30f3 |\n|---|---|---|\n| \u8d77\u52d5\u6642\u9593 | \u79d2\u5358\u4f4d | \u5206\u5358\u4f4d |\n| \u30b5\u30a4\u30ba | MB \u5358\u4f4d | GB \u5358\u4f4d |\n| \u5206\u96e2\u30ec\u30d9\u30eb | \u30d7\u30ed\u30bb\u30b9\u3068 Linux \u540d\u524d\u7a7a\u9593\u306a\u3069\uff08\u30ab\u30fc\u30cd\u30eb\u306f\u5171\u6709\uff09 | \u30b2\u30b9\u30c8 OS \u3054\u3068\uff08\u30ab\u30fc\u30cd\u30eb\u3082\u5225\uff09 |\n| \u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9 | \u5c0f\u3055\u3044 | \u5927\u304d\u3044 |\n\n#### \u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9\u3068\u306f\uff1f\n\n**\u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9**\u3068\u306f\u3001\u300c\u30a2\u30d7\u30ea\u3092\u52d5\u304b\u3059\u300d\u3068\u3044\u3046\u672c\u6765\u306e\u76ee\u7684\u306e\u307b\u304b\u306b\u3001\u4ed5\u7d44\u307f\u5074\u304c\u4f59\u5206\u306b\u6d88\u8cbb\u3059\u308b\u30b3\u30b9\u30c8\u306e\u3053\u3068\u3067\u3059\u3002\u305f\u3068\u3048\u3070 **CPU\u30fb\u30e1\u30e2\u30ea\u30fb\u30c7\u30a3\u30b9\u30af\u5bb9\u91cf** \u306e\u8ffd\u52a0\u6d88\u8cbb\u3001**\u8d77\u52d5\u306b\u304b\u304b\u308b\u6642\u9593**\u3001**\u66f4\u65b0\u3084\u30d1\u30c3\u30c1\u306e\u5bfe\u8c61\u306b\u306a\u308b OS \u306e\u6570** \u306a\u3069\u304c\u542b\u307e\u308c\u307e\u3059\u3002VM \u306f\u30b2\u30b9\u30c8 OS \u5168\u4f53\u3092\u8f09\u305b\u308b\u305f\u3081\u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9\u304c\u5927\u304d\u304f\u3001\u30b3\u30f3\u30c6\u30ca\u306f\u30db\u30b9\u30c8\u3068\u30ab\u30fc\u30cd\u30eb\u3092\u5171\u6709\u3059\u308b\u305f\u3081\u4e00\u822c\u306b\u5c0f\u3055\u304f\u306a\u308a\u307e\u3059\uff08\u305f\u3060\u3057\u7528\u9014\u3084\u8a2d\u5b9a\u306b\u3088\u3063\u3066\u5909\u308f\u308a\u307e\u3059\uff09\u3002\n\n#### \u5206\u96e2\u30ec\u30d9\u30eb\u306e\u9055\u3044\uff08\u56f3\u3067\u6bd4\u8f03\uff09\n\n\u4e0b\u306e2\u679a\u306f\u3001**\u5171\u901a\u70b9\uff08\u5165\u53e3\u3068\u51fa\u53e3\uff09**\u3068**\u5206\u5c90\u70b9**\u3092\u5148\u306b\u793a\u3057\u3001\u7d9a\u3051\u3066 **VM \u3068\u30b3\u30f3\u30c6\u30ca\u306e\u7a4d\u307f\u4e0a\u3052\u3092\u5de6\u53f3\u3067\u540c\u3058\u6bb5\u306e\u9ad8\u3055\u306b\u63c3\u3048\u3066**\u6bd4\u8f03\u3057\u307e\u3059\u3002\u5de6\u53f3\u306f\u300c\u540c\u6642\u306b\u4e21\u65b9\u3092\u5fc5\u305a\u4f7f\u3046\u300d\u3068\u3044\u3046\u610f\u5473\u3067\u306f\u306a\u304f\u3001**\u4ee3\u8868\u7684\u306a\u7a4d\u307f\u65b9\u306e\u5bfe\u6bd4**\u3067\u3059\uff08\u5b9f\u904b\u7528\u3067\u306f\u3069\u3061\u3089\u304b\u3001\u307e\u305f\u306f\u6df7\u5728\u69cb\u6210\u3092\u9078\u3073\u307e\u3059\uff09\u3002\n\n**\u56f31\uff08\u4e0a\u2192\u4e0b\uff09**: \u5171\u901a\u2460\u304b\u3089\u5206\u5c90\u70b9\u2461\u3078\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16, 'subgraphTitleMargin': 8}}}%%\nflowchart TB\n  g1[\"\u5171\u901a\u2460 \u72d9\u3044\u306f\u540c\u3058<br/>1\u53f0\u306e\u30de\u30b7\u30f3\u4e0a\u3067\u30a2\u30d7\u30ea\u540c\u58eb\u3092\u5206\u96e2\u3057\u3066\u52d5\u304b\u3059\"]\n  fork[\"\u2461 \u5206\u5c90\u70b9<br/>\u30ab\u30fc\u30cd\u30eb\u3092VM\u3054\u3068\u306b\u5897\u3084\u3059\u304b / \u30db\u30b9\u30c8\u306e1\u3064\u3092\u5171\u6709\u3059\u308b\u304b\"]\n  g1 --> fork\n```\n\n**\u56f32\uff08\u5de6\u2192\u53f3\uff0b\u5404\u5217\u306f\u4e0a\u2192\u4e0b\uff09**: \u2461\u306e\u5148\u306e\u7a4d\u307f\u4e0a\u3052\u3068\u3001\u5171\u901a\u2462\uff08\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\uff09\u307e\u3067\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16, 'subgraphTitleMargin': 8}}}%%\nflowchart LR\n  subgraph svm[\"VM\"]\n    direction TB\n    vmApp[\"\u30a2\u30d7\u30ea\"] --> vmGuest[\"\u30b2\u30b9\u30c8OS<br/>\uff0b\u30ab\u30fc\u30cd\u30eb\uff08VM\u3054\u3068\uff09\"]\n    vmGuest --> vmHv[\"\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\"]\n  end\n  subgraph sct[\"\u30b3\u30f3\u30c6\u30ca\"]\n    direction TB\n    ctApp[\"\u30a2\u30d7\u30ea\"] --> ctRt[\"\u30b3\u30f3\u30c6\u30ca\u30e9\u30f3\u30bf\u30a4\u30e0<br/>\u540d\u524d\u7a7a\u9593\u30fbcgroups \u7b49\"]\n    ctRt --> ctK[\"\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb<br/>1\u3064\u3092\u5171\u6709\"]\n  end\n  hw[\"\u5171\u901a\u2462 \u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2<br/>\uff08\u3069\u3061\u3089\u306e\u7d4c\u8def\u3082\u6700\u7d42\u7684\u306b\u3053\u3053\uff09\"]\n  vmHv --> hw\n  ctK --> hw\n```\n\n**\u8aad\u307f\u65b9\u306e\u8981\u70b9**\n\n- **\u5171\u901a**: \u2460\u306e\u3068\u304a\u308a\u72d9\u3044\u306f\u300c\u5206\u96e2\u3057\u3066\u52d5\u304b\u3059\u300d\u3053\u3068\u3002\u2462\u306e\u3068\u304a\u308a\u3001\u6700\u7d42\u7684\u306a\u5b9f\u884c\u306f\u3069\u3061\u3089\u3082\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u306b\u884c\u304d\u7740\u304d\u307e\u3059\u3002\n- **\u5dee\u5206**: \u2461\u4ee5\u964d\u3002VM \u306f **\u30b2\u30b9\u30c8 OS \u3068\u30ab\u30fc\u30cd\u30eb\u304c VM \u5358\u4f4d\u3067\u5897\u3048**\u3001\u305d\u306e\u4e0b\u306b\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\u304c\u3042\u308a\u307e\u3059\u3002\u30b3\u30f3\u30c6\u30ca\u306f **\u30ab\u30fc\u30cd\u30eb\u306f 1 \u3064**\u3092\u5171\u6709\u3057\u3001\u30e9\u30f3\u30bf\u30a4\u30e0\u304c\u540d\u524d\u7a7a\u9593\u306a\u3069\u3067\u898b\u3048\u65b9\u3092\u5206\u3051\u307e\u3059\u3002\n- **\u8996\u7dda\u306e\u52d5\u304b\u3057\u65b9**: \u56f31\u306f\u4e0a\u304b\u3089\u4e0b\u3002\u56f32\u306f\u5217\u3054\u3068\u306b\u4e0a\u304b\u3089\u4e0b\uff08\u30a2\u30d7\u30ea \u2192 \u5206\u96e2\u306e\u4ed5\u7d44\u307f \u2192 \u30a4\u30f3\u30d5\u30e9\u5bc4\u308a\u306e\u5c64\uff09\u3068\u8aad\u307f\u3001**\u540c\u3058\u6bb5\u3092\u6a2a\u306b\u6bd4\u8f03**\u3057\u3066\u304f\u3060\u3055\u3044\u3002\n\n\u8868\u306e\u300c\u8d77\u52d5\u30fb\u30b5\u30a4\u30ba\u30fb\u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9\u300d\u306e\u5dee\u306f\u3001\u5927\u3065\u304b\u307f\u306b\u306f **\u2461\u4ee5\u964d\u3067\u30ab\u30fc\u30cd\u30eb\u3084\u30b2\u30b9\u30c8 OS \u3092\u3069\u308c\u3060\u3051\u8907\u88fd\u3059\u308b\u304b**\u306e\u9055\u3044\u3068\u3057\u3066\u8aac\u660e\u3067\u304d\u307e\u3059\u3002\n\n\u307e\u3068\u3081\u308b\u3068\u3001\u30b3\u30f3\u30c6\u30ca\u306f VM \u3088\u308a **\u8efd\u304f\u30fb\u901f\u304f\u30fb\u30a4\u30e1\u30fc\u30b8\u3082\u5c0f\u3055\u304f\u306a\u308a\u3084\u3059\u3044**\u3067\u3059\u3002\u305d\u306e\u4ee3\u308f\u308a\u3001\u5206\u96e2\u306e\u8a2d\u8a08\uff08\u30ab\u30fc\u30cd\u30eb\u5171\u6709\uff09\u304c VM \u3068\u7570\u306a\u308b\u305f\u3081\u3001\u8105\u5a01\u30e2\u30c7\u30eb\u3084\u30b3\u30f3\u30d7\u30e9\u30a4\u30a2\u30f3\u30b9\u306e\u8981\u4ef6\u306b\u5fdc\u3058\u3066\u4f7f\u3044\u5206\u3051\u307e\u3059\u3002\n"}], "grading": {"expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u672c\u6587\u306b\u5171\u901a\u70b9\u3068\u5dee\u5206\u306e\u4e21\u65b9\u3078\u306e\u8a00\u53ca\u304c\u3042\u308b", "passed": true, "evidence": "common=True, difference=True"}, {"text": "\u56f3\u307e\u305f\u306f\u88dc\u8db3\u3067\u8aad\u307f\u9806\uff08\u4e0a\u304b\u3089\u4e0b / \u5de6\u304b\u3089\u53f3\u306a\u3069\uff09\u304c\u793a\u3055\u308c\u3066\u3044\u308b", "passed": true, "evidence": "Found reading-order guidance."}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}, "execution_metrics": {"tool_calls": {}, "total_tool_calls": 0, "total_steps": 0, "errors_encountered": 0, "output_chars": 1827, "transcript_chars": 0}, "timing": {"executor_duration_seconds": 0.0, "grader_duration_seconds": 0.0, "total_duration_seconds": 0.0}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"overall": "Iteration 2 still uses lightweight assertions. Use the review viewer to judge whether same-layer alignment is genuinely clearer, especially for eval 1."}}}, {"id": "vm-container-comparison-with_skill", "prompt": "foundation/01-what-is-docker/README.md \u306e VM \u3068\u30b3\u30f3\u30c6\u30ca\u306e\u8aac\u660e\u304c\u982d\u306b\u5165\u308a\u306b\u304f\u3044\u3067\u3059\u3002Mermaid \u3068\u77ed\u3044\u88dc\u8db3\u6587\u3067\u3001\u5171\u901a\u70b9\u3068\u5dee\u5206\u304c\u4e00\u76ee\u3067\u5206\u304b\u308b\u3088\u3046\u306b\u76f4\u3057\u3066\u304f\u3060\u3055\u3044\u3002\u56f3\u306e\u91cd\u306a\u308a\u306b\u3082\u6c17\u3092\u3064\u3051\u3066\u304f\u3060\u3055\u3044\u3002", "eval_id": 1, "outputs": [{"name": "answer.md", "type": "text", "content": "# VM \u3068\u30b3\u30f3\u30c6\u30ca\uff1a\u6a2a\u4e26\u3073\u30ec\u30a4\u30e4\u6bd4\u8f03\uff081\u679a\uff09\n\n`foundation/01-what-is-docker/README.md` \u306e\u300c\u5206\u96e2\u30ec\u30d9\u30eb\u306e\u9055\u3044\u300d\u3092\u3001**1\u679a\u306e\u56f3**\u3067\u8aad\u307f\u53d6\u308c\u308b\u3088\u3046\u306b\u3057\u307e\u3057\u305f\u3002\u5404\u6bb5\u306f **\u5de6\uff1dVM / \u53f3\uff1d\u30b3\u30f3\u30c6\u30ca**\u3067\u3001**\u540c\u3058\u6bb5\u306e\u30ce\u30fc\u30c9\u304c\u5e38\u306b\u540c\u3058\u9ad8\u3055**\u306b\u4e26\u3076\u3088\u3046\u306b\u69cb\u6210\u3057\u3066\u3044\u307e\u3059\uff08\u884c\uff1d\u30ec\u30a4\u30e4\uff09\u3002\n\n## \u6bb5\u3068\u5217\u306e\u5bfe\u5fdc\n\n| \u6bb5 | \u5de6\uff08VM\uff09 | \u53f3\uff08\u30b3\u30f3\u30c6\u30ca\uff09 |\n|---|---|---|\n| 1 | \u30a2\u30d7\u30ea\u304c\u8f09\u308b | \u30a2\u30d7\u30ea\u304c\u8f09\u308b\uff08\u5f79\u5272\u306f\u540c\u3058\uff09 |\n| 2 | **\u30b2\u30b9\u30c8 OS\uff0b\u30ab\u30fc\u30cd\u30eb**\uff08VM \u3054\u3068\uff09 | **\u30e9\u30f3\u30bf\u30a4\u30e0\uff0b\u540d\u524d\u7a7a\u9593\u7b49**\uff08\u30ab\u30fc\u30cd\u30eb\u306f\u307e\u3060\u5171\u6709\uff09 |\n| 3 | **\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc** | **\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb 1 \u3064**\uff08\u5168\u30b3\u30f3\u30c6\u30ca\u3067\u5171\u6709\uff09 |\n| 4 | \u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u3078 | \u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u3078\uff08\u5171\u901a\u306e\u51fa\u53e3\uff09 |\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 28, 'rankSpacing': 40, 'padding': 16, 'subgraphTitleMargin': 8}}}%%\nflowchart TB\n  goal[\"\u5171\u901a\u2460 \u72d9\u3044\u306f\u540c\u3058<br/>1\u53f0\u3067\u30a2\u30d7\u30ea\u3092\u5206\u96e2\u3057\u3066\u7a3c\u50cd\"]\n\n  subgraph row1[\"\u6bb51\u30fb\u30a2\u30d7\u30ea\u5c64\uff08\u5de6\u53f3\u3067\u540c\u3058\u5f79\u5272\uff09\"]\n    direction LR\n    vma[\"VM\u5074<br/>\u30a2\u30d7\u30ea A / B\"]\n    cta[\"\u30b3\u30f3\u30c6\u30ca\u5074<br/>\u30a2\u30d7\u30ea A / B\"]\n  end\n\n  subgraph row2[\"\u6bb52\u30fb\u5206\u5c90\uff08\u3053\u3053\u304b\u3089\u7a4d\u307f\u65b9\u304c\u5909\u308f\u308b\uff09\"]\n    direction LR\n    vmb[\"VM\u5074<br/>\u30b2\u30b9\u30c8OS\uff0b\u30ab\u30fc\u30cd\u30eb<br/>VM\u3054\u3068\u306b\u5225\u500b\"]\n    ctb[\"\u30b3\u30f3\u30c6\u30ca\u5074<br/>\u30b3\u30f3\u30c6\u30ca\u30e9\u30f3\u30bf\u30a4\u30e0<br/>\u540d\u524d\u7a7a\u9593\u30fbcgroups \u7b49\"]\n  end\n\n  subgraph row3[\"\u6bb53\u30fb\u5206\u5c90\uff08\u5883\u754c\u306e\u7f6e\u304d\u65b9\u304c\u9055\u3046\uff09\"]\n    direction LR\n    vmc[\"VM\u5074<br/>\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\"]\n    ctc[\"\u30b3\u30f3\u30c6\u30ca\u5074<br/>\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb<br/>1\u3064\u3092\u5171\u6709\"]\n  end\n\n  hw[\"\u5171\u901a\u2462 \u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\"]\n\n  goal --> vma\n  goal --> cta\n  vma --> vmb\n  cta --> ctb\n  vmb --> vmc\n  ctb --> ctc\n  vmc --> hw\n  ctc --> hw\n\n  classDef same fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#0d47a1\n  classDef split fill:#fff8e1,stroke:#f9a825,stroke-width:2px,color:#5d4037\n  class goal,hw,vma,cta same\n  class vmb,vmc,ctb,ctc split\n```\n\n## \u8aad\u307f\u65b9\n\n- **\u6a2a\u306b\u898b\u308b**: \u5404 `\u6bb5n` \u306e\u884c\u3067 **\u5de6\u3068\u53f3\u3092\u540c\u3058\u9ad8\u3055\u306e\u5bfe\u5fdc\u30da\u30a2**\u3068\u3057\u3066\u8aad\u3080\uff08\u6bb51\u306f\u4e21\u65b9\u30a2\u30d7\u30ea\u3001\u6bb52\u30fb3\u304c\u672c\u4e38\u306e\u5dee\u5206\uff09\u3002\n- **\u7e26\u306b\u898b\u308b**: \u5de6\u5217\u3060\u3051\u3001\u53f3\u5217\u3060\u3051\u3092\u305f\u3069\u308b\u3068\u3001\u305d\u308c\u305e\u308c VM / \u30b3\u30f3\u30c6\u30ca\u306e\u7a4d\u307f\u4e0a\u3052\u9806\u306b\u306a\u308b\u3002\n- **\u5171\u901a\u3068\u5dee\u5206**: \u72d9\u3044\u30fb\u30a2\u30d7\u30ea\u5c64\u30fb\u7269\u7406 HW \u306f\u5171\u901a\u306e\u571f\u53f0\u3002\u6bb52\u30fb3\u3067\u300c\u30ab\u30fc\u30cd\u30eb\u3092 VM \u3054\u3068\u6301\u3064\u304b\u30011\u3064\u5171\u6709\u3059\u308b\u304b\u300d\u3068\u300c\u305d\u306e\u4e0b\u306b\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\u304b\u5171\u6709\u30ab\u30fc\u30cd\u30eb\u304b\u300d\u304c\u5206\u304b\u308c\u308b\u3002\n\n\u203b \u4ee3\u8868\u30e2\u30c7\u30eb\u3067\u3059\u3002Type-1/2 \u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\u3084\u30db\u30b9\u30c8 OS \u306e\u6271\u3044\u306a\u3069\u3001\u5b9f\u88c5\u3067\u7d30\u90e8\u306f\u7570\u306a\u308a\u307e\u3059\u3002\n"}], "grading": {"expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u672c\u6587\u306b\u5171\u901a\u70b9\u3068\u5dee\u5206\u306e\u4e21\u65b9\u3078\u306e\u8a00\u53ca\u304c\u3042\u308b", "passed": true, "evidence": "common=True, difference=True"}, {"text": "\u56f3\u307e\u305f\u306f\u88dc\u8db3\u3067\u8aad\u307f\u9806\uff08\u4e0a\u304b\u3089\u4e0b / \u5de6\u304b\u3089\u53f3\u306a\u3069\uff09\u304c\u793a\u3055\u308c\u3066\u3044\u308b", "passed": true, "evidence": "Found reading-order guidance."}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}, "execution_metrics": {"tool_calls": {}, "total_tool_calls": 0, "total_steps": 0, "errors_encountered": 0, "output_chars": 1591, "transcript_chars": 0}, "timing": {"executor_duration_seconds": 0.0, "grader_duration_seconds": 0.0, "total_duration_seconds": 0.0}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"overall": "Iteration 2 still uses lightweight assertions. Use the review viewer to judge whether same-layer alignment is genuinely clearer, especially for eval 1."}}}, {"id": "oauth-login-flow-old_skill", "prompt": "OAuth \u306e\u30ed\u30b0\u30a4\u30f3\u30d5\u30ed\u30fc\u3092\u521d\u5fc3\u8005\u5411\u3051\u306b\u8aac\u660e\u3059\u308b README \u3092\u66f8\u3044\u3066\u3044\u307e\u3059\u3002\u30d6\u30e9\u30a6\u30b6\u3001\u30a2\u30d7\u30ea\u3001\u8a8d\u53ef\u30b5\u30fc\u30d0\u3001API \u30b5\u30fc\u30d0\u306e\u3084\u308a\u3068\u308a\u3092 Mermaid \u3067\u898b\u305b\u3064\u3064\u3001\u3069\u3053\u3067\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u304c\u767b\u5834\u3059\u308b\u304b\u3082\u5206\u304b\u308b\u3088\u3046\u306b\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "eval_id": 2, "outputs": [{"name": "answer.md", "type": "text", "content": "# OAuth \u306e\u30ed\u30b0\u30a4\u30f3\u30d5\u30ed\u30fc\uff08\u521d\u5fc3\u8005\u5411\u3051\u30fbREADME \u7528\u30e1\u30e2\uff09\n\n\u3053\u306e\u7bc0\u306e\u30b4\u30fc\u30eb\u306f\u3001**\u30d6\u30e9\u30a6\u30b6\u30fb\u30a2\u30d7\u30ea\u30fb\u8a8d\u53ef\u30b5\u30fc\u30d0\u30fbAPI \u30b5\u30fc\u30d0\u304c\u3069\u306e\u9806\u3067\u8a71\u3057\u5408\u3044\u3001\u3069\u3053\u3067\u300c\u8a8d\u53ef\u30b3\u30fc\u30c9\u300d\u3068\u300c\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u300d\u304c\u73fe\u308c\u308b\u304b**\u3092\u4e00\u679a\u306e\u6d41\u308c\u3068\u3057\u3066\u8ffd\u3048\u308b\u3053\u3068\u3067\u3059\u3002\u3053\u3053\u3067\u306f\u4ee3\u8868\u7684\u306a **\u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc**\uff08Web \u30a2\u30d7\u30ea\u3084\u30cd\u30a4\u30c6\u30a3\u30d6\u30a2\u30d7\u30ea\u3067\u3088\u304f\u4f7f\u3046\u5f62\uff09\u3092\u524d\u63d0\u306b\u3057\u307e\u3059\u3002\n\n## 4 \u3064\u306e\u5f79\u5272\uff08\u3056\u3063\u304f\u308a\uff09\n\n| \u5f79\u5272 | \u5f79\u5272\u306e\u4e00\u8a00 |\n|------|------------|\n| **\u30d6\u30e9\u30a6\u30b6** | \u30e6\u30fc\u30b6\u30fc\u306e\u64cd\u4f5c\u753b\u9762\u3002\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u30ed\u30b0\u30a4\u30f3\u753b\u9762\u3092\u958b\u304d\u3001\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3067\u7d50\u679c\u3092\u30a2\u30d7\u30ea\u306b\u8fd4\u3059\u300c\u904b\u3073\u5c4b\u300d\u3002 |\n| **\u30a2\u30d7\u30ea** | \u300c\u30ed\u30b0\u30a4\u30f3\u3057\u3066\u300d\u3068\u30e6\u30fc\u30b6\u30fc\u306b\u983c\u307f\u3001\u53d7\u3051\u53d6\u3063\u305f\u30b3\u30fc\u30c9\u3092\u30c8\u30fc\u30af\u30f3\u306b\u4ea4\u63db\u3057\u3001API \u3092\u547c\u3076\u672c\u4f53\u3002 |\n| **\u8a8d\u53ef\u30b5\u30fc\u30d0** | \u672c\u4eba\u78ba\u8a8d\u3092\u3057\u3001**\u8a8d\u53ef\u30b3\u30fc\u30c9**\u3084**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u3092\u767a\u884c\u3059\u308b\u7a93\u53e3\u3002 |\n| **API \u30b5\u30fc\u30d0** | **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u304c\u59a5\u5f53\u306a\u3089\u30c7\u30fc\u30bf\u3092\u8fd4\u3059\u3001\u3044\u308f\u3086\u308b\u30d0\u30c3\u30af\u30a8\u30f3\u30c9 API\u3002 |\n\n## \u5168\u4f53\u306e\u3084\u308a\u3068\u308a\uff08Mermaid \u30b7\u30fc\u30b1\u30f3\u30b9\uff09\n\n\u4e0b\u56f3\u306f\u3001**\u5de6\u304b\u3089\u53f3\u3078\u6642\u9593\u304c\u9032\u3080**\u30b7\u30fc\u30b1\u30f3\u30b9\u56f3\u3067\u3059\u3002\u77e2\u5370\u306f\u300c\u30e1\u30c3\u30bb\u30fc\u30b8\u306e\u9001\u308a\u5148\u300d\u3001\u6ce8\u91c8\u306f**\u8a8d\u53ef\u30b3\u30fc\u30c9**\u3068**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u304c\u73fe\u308c\u308b\u5834\u6240\u3092\u793a\u3057\u307e\u3059\u3002\n\n```mermaid\nsequenceDiagram\n    actor U as \u30e6\u30fc\u30b6\u30fc\n    participant BR as \u30d6\u30e9\u30a6\u30b6\n    participant APP as \u30a2\u30d7\u30ea\n    participant AS as \u8a8d\u53ef\u30b5\u30fc\u30d0\n    participant RS as API\u30b5\u30fc\u30d0\n\n    U->>APP: \u30ed\u30b0\u30a4\u30f3\u3057\u305f\u3044\n    APP->>BR: \u8a8d\u53ef\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3078\u8a98\u5c0e<br/>\uff08client_id / scope / redirect_uri \u306a\u3069\uff09\n    BR->>AS: \u8a8d\u53ef\u30ea\u30af\u30a8\u30b9\u30c8\uff08\u4f8b: GET /authorize\uff09\n    AS->>U: \u30ed\u30b0\u30a4\u30f3\u30fb\u540c\u610f\u753b\u9762\n    U->>AS: \u30ed\u30b0\u30a4\u30f3\u30fb\u540c\u610f\n    AS->>BR: 302 \u30ea\u30c0\u30a4\u30ec\u30af\u30c8<br/>redirect_uri \u306b\u30af\u30a8\u30ea\u3092\u4ed8\u4e0e\n    Note over BR: \u3053\u3053\u3067\u8a8d\u53ef\u30b3\u30fc\u30c9\u304c\u73fe\u308c\u308b<br/>\uff08\u4f8b: ?code=...&state=...\uff09\n    BR->>APP: \u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u5148\u3078\u9077\u79fb<br/>\uff08\u8a8d\u53ef\u30b3\u30fc\u30c9\u3092\u30a2\u30d7\u30ea\u3078\u6e21\u3059\uff09\n    APP->>AS: \u30c8\u30fc\u30af\u30f3\u30ea\u30af\u30a8\u30b9\u30c8<br/>\uff08\u4f8b: POST /token \u306b code \u3092\u9001\u308b\uff09\n    AS->>APP: \u30c8\u30fc\u30af\u30f3\u5fdc\u7b54\n    Note over APP,AS: \u3053\u3053\u3067\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u304c\u8fd4\u308b<br/>\uff08JSON \u5185\u306e access_token \u306a\u3069\uff09\n    APP->>RS: \u4fdd\u8b77\u3055\u308c\u305f API \u547c\u3073\u51fa\u3057<br/>Authorization: Bearer \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\n    RS->>APP: \u30ea\u30bd\u30fc\u30b9\uff08JSON \u306a\u3069\uff09\n```\n\n### \u8aad\u307f\u65b9\u306e\u88dc\u8db3\n\n- **\u5171\u901a\u3057\u3066\u8d77\u304d\u308b\u3053\u3068**: \u8a8d\u53ef\u30b5\u30fc\u30d0\u304c\u300c\u3053\u306e\u30e6\u30fc\u30b6\u30fc\u306f OK\u300d\u3068\u5224\u65ad\u3057\u305f\u3042\u3068\u3001\u307e\u305a\u77ed\u547d\u306e **\u8a8d\u53ef\u30b3\u30fc\u30c9**\u3092\u30d6\u30e9\u30a6\u30b6\u7d4c\u7531\u3067\u30a2\u30d7\u30ea\u306b\u6e21\u3057\u3001\u7d9a\u3051\u3066\u30a2\u30d7\u30ea\u304c\u8a8d\u53ef\u30b5\u30fc\u30d0\u306b\u305d\u306e\u30b3\u30fc\u30c9\u3092\u898b\u305b\u3066 **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u306b\u4ea4\u63db\u3057\u307e\u3059\u3002\n- **\u5206\u304b\u308c\u76ee**: **\u8a8d\u53ef\u30b3\u30fc\u30c9**\u306f\u4e3b\u306b **\u30d6\u30e9\u30a6\u30b6\u306e URL\uff08\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\uff09**\u306b\u8f09\u308a\u307e\u3059\u3002**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u306f\u901a\u5e38 **\u30a2\u30d7\u30ea\u3068\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u76f4\u63a5\u901a\u4fe1**\uff08\u30c8\u30fc\u30af\u30f3\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u306e\u5fdc\u7b54\uff09\u3067\u53d7\u3051\u53d6\u308a\u3001\u4ee5\u964d API \u30b5\u30fc\u30d0\u3078\u306e\u30ea\u30af\u30a8\u30b9\u30c8\u306b\u6dfb\u3048\u307e\u3059\u3002\n- **\u77e2\u5370\u306e\u610f\u5473**: `->>` \u306f\u8981\u6c42\u3084\u5fdc\u7b54\u306e\u3084\u308a\u3068\u308a\u3092\u8868\u3057\u307e\u3059\u3002\u5b9f\u88c5\u3067\u306f HTTPS \u306e GET/POST\u3001\u30d8\u30c3\u30c0\u3084\u30d5\u30a9\u30fc\u30e0\u306e\u5f62\u306b\u306a\u308a\u307e\u3059\u3002\n\n## \u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u3060\u3051\u629c\u304d\u51fa\u3057\n\n| \u9805\u76ee | \u4e3b\u306a\u51fa\u73fe\u5834\u6240 | \u5f79\u5272\u306e\u30a4\u30e1\u30fc\u30b8 |\n|------|----------------|----------------|\n| **\u8a8d\u53ef\u30b3\u30fc\u30c9** | \u30d6\u30e9\u30a6\u30b6 \u2192 \u30a2\u30d7\u30ea\u3078\u306e\u30ea\u30c0\u30a4\u30ec\u30af\u30c8 URL \u306e\u30af\u30a8\u30ea\uff08\u4f8b: `code=`\uff09 | \u300c\u672c\u4eba\u78ba\u8a8d\u3068\u540c\u610f\u304c\u7d42\u308f\u3063\u305f\u3088\u300d\u306e**\u4e00\u56de\u9650\u308a\u306e\u5f15\u63db\u5238**\u3002\u305d\u306e\u307e\u307e\u9577\u671f\u4fdd\u5b58\u3057\u306a\u3044\u306e\u304c\u671b\u307e\u3057\u3044\u3002 |\n| **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3** | \u8a8d\u53ef\u30b5\u30fc\u30d0 \u2192 \u30a2\u30d7\u30ea\u306e\u30c8\u30fc\u30af\u30f3\u5fdc\u7b54\uff08JSON \u306a\u3069\uff09 | API \u30b5\u30fc\u30d0\u306b\u300c\u3053\u306e\u30e6\u30fc\u30b6\u30fc\u3068\u3057\u3066\u30a2\u30af\u30bb\u30b9\u3057\u3066\u3044\u3044\u300d\u3053\u3068\u3092\u793a\u3059**\u30d1\u30b9**\u3002 |\n\n## \u88dc\u8db3\uff08README \u306b\u4e00\u884c\u8db3\u3059\u306a\u3089\uff09\n\n- \u672c\u7a3f\u306f **OAuth 2.0 \u306e\u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc**\u306e\u6982\u7565\u3067\u3059\u3002\u516c\u958b\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\uff08SPA\u30fb\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u7b49\uff09\u3067\u306f **PKCE** \u3092\u7d44\u307f\u5408\u308f\u305b\u308b\u3053\u3068\u304c\u4e00\u822c\u7684\u3067\u3059\uff08\u56f3\u306e\u5f62\u306f\u540c\u3058\u3067\u3001\u30c8\u30fc\u30af\u30f3\u30ea\u30af\u30a8\u30b9\u30c8\u306b\u8ffd\u52a0\u30d1\u30e9\u30e1\u30fc\u30bf\u304c\u4e57\u308a\u307e\u3059\uff09\u3002\n- **OpenID Connect** \u3092\u4f7f\u3046\u3068\u3001\u540c\u3058\u6d41\u308c\u306e\u306a\u304b\u3067 **ID \u30c8\u30fc\u30af\u30f3**\uff08\u30ed\u30b0\u30a4\u30f3\u3057\u305f\u30e6\u30fc\u30b6\u30fc\u306e\u8b58\u5225\u60c5\u5831\uff09\u3082\u8fd4\u308a\u3001\u3044\u308f\u3086\u308b\u300c\u30ed\u30b0\u30a4\u30f3\u300d\u3068\u4e00\u4f53\u5316\u3057\u307e\u3059\u3002\n"}], "grading": {"expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u306e\u4e21\u65b9\u304c\u672c\u6587\u307e\u305f\u306f\u56f3\u306b\u73fe\u308c\u308b", "passed": true, "evidence": "auth_code=True, access_token=True"}, {"text": "\u30d6\u30e9\u30a6\u30b6\u30fb\u30a2\u30d7\u30ea\u30fb\u8a8d\u53ef\u30b5\u30fc\u30d0\u30fbAPI \u30b5\u30fc\u30d0\u306e4\u8005\u304c\u8aac\u660e\u306b\u542b\u307e\u308c\u308b", "passed": true, "evidence": "\u30d6\u30e9\u30a6\u30b6=True, \u30a2\u30d7\u30ea=True, \u8a8d\u53ef\u30b5\u30fc\u30d0=True, API \u30b5\u30fc\u30d0=True"}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}, "execution_metrics": {"tool_calls": {}, "total_tool_calls": 0, "total_steps": 0, "errors_encountered": 0, "output_chars": 2156, "transcript_chars": 0}, "timing": {"executor_duration_seconds": 0.0, "grader_duration_seconds": 0.0, "total_duration_seconds": 0.0}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"overall": "Iteration 2 still uses lightweight assertions. Use the review viewer to judge whether same-layer alignment is genuinely clearer, especially for eval 1."}}}, {"id": "oauth-login-flow-with_skill", "prompt": "OAuth \u306e\u30ed\u30b0\u30a4\u30f3\u30d5\u30ed\u30fc\u3092\u521d\u5fc3\u8005\u5411\u3051\u306b\u8aac\u660e\u3059\u308b README \u3092\u66f8\u3044\u3066\u3044\u307e\u3059\u3002\u30d6\u30e9\u30a6\u30b6\u3001\u30a2\u30d7\u30ea\u3001\u8a8d\u53ef\u30b5\u30fc\u30d0\u3001API \u30b5\u30fc\u30d0\u306e\u3084\u308a\u3068\u308a\u3092 Mermaid \u3067\u898b\u305b\u3064\u3064\u3001\u3069\u3053\u3067\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u304c\u767b\u5834\u3059\u308b\u304b\u3082\u5206\u304b\u308b\u3088\u3046\u306b\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "eval_id": 2, "outputs": [{"name": "answer.md", "type": "text", "content": "# OAuth \u306e\u30ed\u30b0\u30a4\u30f3\u30d5\u30ed\u30fc\uff08\u521d\u5fc3\u8005\u5411\u3051\uff09\n\nOAuth 2.0 \u306e **\u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc**\u306f\u3001**API \u30b5\u30fc\u30d0\u306b\u30e6\u30fc\u30b6\u30fc\u306e\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u6e21\u3055\u305a**\u3001\u8a8d\u53ef\u30b5\u30fc\u30d0\u304c\u767a\u884c\u3057\u305f\u8a31\u53ef\u306b\u57fa\u3065\u3044\u3066 **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3** \u3060\u3051\u3067 API \u3092\u547c\u3076\u305f\u3081\u306e\u6d41\u308c\u3067\u3059\u3002\u3053\u3053\u3067\u306f **\u30d6\u30e9\u30a6\u30b6**\u30fb**\u30a2\u30d7\u30ea\uff08\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\uff09**\u30fb**\u8a8d\u53ef\u30b5\u30fc\u30d0**\u30fb**API \u30b5\u30fc\u30d0**\u306e\u3084\u308a\u3068\u308a\u3092\u9806\u306b\u8ffd\u3044\u3001**\u8a8d\u53ef\u30b3\u30fc\u30c9**\u3068**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u304c\u3069\u3053\u3067\u521d\u3081\u3066\u73fe\u308c\u308b\u304b\u3092\u56f3\u306b\u793a\u3057\u307e\u3059\u3002\n\n---\n\n## \u767b\u5834\u3059\u308b\u5f79\u5272\n\n| \u5f79\u5272 | \u3056\u3063\u304f\u308a\u3057\u305f\u4ed5\u4e8b |\n|------|------------------|\n| **\u30d6\u30e9\u30a6\u30b6** | \u30e6\u30fc\u30b6\u30fc\u306e\u64cd\u4f5c\u753b\u9762\u3002\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u30ed\u30b0\u30a4\u30f3\u753b\u9762\u3092\u958b\u304d\u3001\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3067\u7d50\u679c\u3092\u30a2\u30d7\u30ea\u306b\u8fd4\u3059\u3002 |\n| **\u30a2\u30d7\u30ea\uff08\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\uff09** | \u81ea\u793e\u306e Web \u30b5\u30fc\u30d0\u3002\u8a8d\u53ef URL \u3092\u7d44\u307f\u7acb\u3066\u3001**\u8a8d\u53ef\u30b3\u30fc\u30c9\u3092\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u306b\u4ea4\u63db**\u3057\u3001API \u3092\u547c\u3076\u3002 |\n| **\u8a8d\u53ef\u30b5\u30fc\u30d0** | IdP / \u8a8d\u53ef\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3002\u30ed\u30b0\u30a4\u30f3\u3068\u540c\u610f\u306e UI \u3092\u51fa\u3057\u3001**\u8a8d\u53ef\u30b3\u30fc\u30c9**\u3068**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u3092\u767a\u884c\u3059\u308b\u3002 |\n| **API \u30b5\u30fc\u30d0** | \u4fdd\u8b77\u3057\u305f\u3044\u30ea\u30bd\u30fc\u30b9\u3002**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u304c\u59a5\u5f53\u304b\u78ba\u8a8d\u3057\u3066\u304b\u3089\u30c7\u30fc\u30bf\u3092\u8fd4\u3059\u3002 |\n\n---\n\n## \u5168\u4f53\u306e\u6d41\u308c\uff08\u30b7\u30fc\u30b1\u30f3\u30b9\u56f3\uff09\n\n\u4e0b\u56f3\u306f\u3001**\u8a8d\u53ef\u30b3\u30fc\u30c9**\u304c\u30d6\u30e9\u30a6\u30b6\u7d4c\u7531\u3067\u30a2\u30d7\u30ea\u306b\u5c4a\u304f\u5834\u9762\u3068\u3001**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u304c\u8a8d\u53ef\u30b5\u30fc\u30d0\u304b\u3089\u30a2\u30d7\u30ea\u306b\u76f4\u63a5\u8fd4\u308b\u5834\u9762\u3092\u533a\u5225\u3057\u3066\u793a\u3057\u3066\u3044\u307e\u3059\u3002\u77e2\u5370\u306f\u300c\u305d\u306e\u30bf\u30a4\u30df\u30f3\u30b0\u3067 HTTP \u306a\u3069\u306e\u3084\u308a\u3068\u308a\u304c\u3042\u308b\u300d\u3068\u3044\u3046\u610f\u5473\u3067\u3059\u3002\u5b9f\u904b\u7528\u3067\u306f **HTTPS** \u3092\u524d\u63d0\u306b\u3057\u307e\u3059\u3002\n\n```mermaid\nsequenceDiagram\n    autonumber\n    actor U as \u30e6\u30fc\u30b6\u30fc\n    participant Br as \u30d6\u30e9\u30a6\u30b6\n    participant App as \u30a2\u30d7\u30ea\uff08\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\uff09\n    participant Auth as \u8a8d\u53ef\u30b5\u30fc\u30d0\n    participant API as API \u30b5\u30fc\u30d0\n\n    U->>Br: \u30ed\u30b0\u30a4\u30f3\u3092\u958b\u59cb\n    Br->>App: \u30ed\u30b0\u30a4\u30f3\u8981\u6c42\n    App->>Br: \u8a8d\u53ef URL \u3078\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\uff08client_id / scope / state \u306a\u3069\uff09\n\n    Br->>Auth: \u8a8d\u53ef\u30ea\u30af\u30a8\u30b9\u30c8\uff08\u307e\u3060 code \u3082 token \u3082\u306a\u3044\uff09\n    Auth->>Br: \u30ed\u30b0\u30a4\u30f3\u30fb\u540c\u610f\u753b\u9762\n    U->>Auth: ID/\u30d1\u30b9\u30ef\u30fc\u30c9\u3084\u540c\u610f\n\n    Auth->>Br: \u30a2\u30d7\u30ea\u306e redirect_uri \u3078\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\n\n    Note right of Br: \u2605 \u8a8d\u53ef\u30b3\u30fc\u30c9\u304c\u521d\u51fa<br/>URL \u30af\u30a8\u30ea\u4f8b: ?code=...&state=...\n\n    Br->>App: \u30b3\u30fc\u30eb\u30d0\u30c3\u30af\uff08\u8a8d\u53ef\u30b3\u30fc\u30c9\u3092\u6e21\u3059\uff09\n\n    App->>Auth: \u30c8\u30fc\u30af\u30f3\u30ea\u30af\u30a8\u30b9\u30c8\uff08code + client_id + client_secret \u7b49\uff09\n    Auth->>App: \u30c8\u30fc\u30af\u30f3\u5fdc\u7b54\uff08JSON\uff09\n\n    Note right of App: \u2605 \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u304c\u521d\u51fa<br/>\u5fdc\u7b54\u4f8b: {\"access_token\":\"...\", ...}\n\n    App->>API: API \u547c\u3073\u51fa\u3057\uff08Authorization: Bearer \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff09\n    API->>App: \u4fdd\u8b77\u3055\u308c\u305f\u30c7\u30fc\u30bf\n    App->>Br: \u753b\u9762\u7528\u306e HTML/JSON \u306a\u3069\n```\n\n### \u8aad\u307f\u65b9\u306e\u88dc\u8db3\n\n- **\u5171\u901a\u306e\u72d9\u3044**: \u30e6\u30fc\u30b6\u30fc\u306f **\u8a8d\u53ef\u30b5\u30fc\u30d0** \u3067\u672c\u4eba\u78ba\u8a8d\u3057\u3001API \u30b5\u30fc\u30d0\u306b\u30ed\u30b0\u30a4\u30f3\u7528\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u76f4\u63a5\u6e21\u3055\u306a\u3044\u3002\n- **\u5206\u304b\u308c\u76ee**: **\u8a8d\u53ef\u30b3\u30fc\u30c9**\u306f\u4e3b\u306b**\u30d6\u30e9\u30a6\u30b6\u7d4c\u7531**\uff08\u30b3\u30fc\u30eb\u30d0\u30c3\u30af URL\uff09\u3067\u30a2\u30d7\u30ea\u306b\u5c4a\u304f\u3002**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u306f **\u30a2\u30d7\u30ea\u3068\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u30d0\u30c3\u30af\u30c1\u30e3\u30cd\u30eb**\uff08\u30c8\u30fc\u30af\u30f3\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u306e\u5fdc\u7b54\uff09\u3067\u6e21\u308b\u306e\u304c\u5178\u578b\uff08\u6a5f\u5bc6\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\uff0b\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\u69cb\u6210\uff09\u3002\n- **\u4e0a\u304b\u3089\u4e0b**: \u756a\u53f7\u4ed8\u304d\u306e\u9806\u306b\u6642\u9593\u304c\u9032\u307f\u307e\u3059\u3002\n\n---\n\n## \u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff08\u5bfe\u6bd4\u8868\uff09\n\n\u300c\u3069\u3061\u3089\u3082\u8a8d\u53ef\u30b5\u30fc\u30d0\u304c\u95a2\u4e0e\u3059\u308b\u304c\u3001**\u73fe\u308c\u308b\u5834\u6240**\u3068**\u5f79\u5272**\u304c\u9055\u3046\u300d\u3053\u3068\u3092\u8868\u306b\u307e\u3068\u3081\u307e\u3059\u3002\n\n| | \u8a8d\u53ef\u30b3\u30fc\u30c9\uff08authorization code\uff09 | \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff08access token\uff09 |\n|---|----------------------------------|-------------------------------------|\n| **\u4e3b\u306b\u73fe\u308c\u308b\u5834\u6240** | \u30d6\u30e9\u30a6\u30b6 \u2192 \u30a2\u30d7\u30ea\u3078\u306e\u30ea\u30c0\u30a4\u30ec\u30af\u30c8 URL\uff08`?code=...`\uff09 | \u30c8\u30fc\u30af\u30f3\u5fdc\u7b54\u306e JSON\u3001\u4ee5\u964d\u306e API \u30ea\u30af\u30a8\u30b9\u30c8\u306e `Authorization` \u30d8\u30c3\u30c0 |\n| **\u3060\u308c\u304c\u4e3b\u306b\u6271\u3046\u304b** | \u30a2\u30d7\u30ea\u306e\u30b5\u30fc\u30d0\u304c\u53d7\u3051\u53d6\u308a\u3001\u3059\u3050\u30c8\u30fc\u30af\u30f3\u4ea4\u63db\u306b\u4f7f\u3046 | \u30a2\u30d7\u30ea\u304c API \u547c\u3073\u51fa\u3057\u306b\u6dfb\u3048\u308b\uff08\u516c\u958b\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u3067\u306f\u6271\u3044\u65b9\u306b\u6ce8\u610f\uff09 |\n| **\u30a4\u30e1\u30fc\u30b8** | \u30c8\u30fc\u30af\u30f3\u3068\u4ea4\u63db\u3059\u308b\u305f\u3081\u306e **\u4e00\u56de\u9650\u308a\u306e\u5408\u8a00\u8449** | API \u306e\u7a93\u53e3\u3092\u958b\u3051\u308b **\u9375**\uff08\u6f0f\u308c\u308b\u3068\u88ab\u5bb3\u304c\u5927\u304d\u3044\uff09 |\n\n---\n\n## \u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u3060\u3051\u629c\u304d\u51fa\u3059\u56f3\uff08LR\uff09\n\n\u300c\u3069\u306e\u533a\u9593\u306b\u4f55\u304c\u8f09\u308b\u304b\u300d\u3092\u4e00\u679a\u3067\u6574\u7406\u3057\u305f\u56f3\u3067\u3059\u3002\u6bd4\u8f03\u306e\u8ef8\u306f **\u30d6\u30e9\u30a6\u30b6\u306e URL / \u753b\u9762\u306b\u51fa\u308b\u60c5\u5831** \u3068 **\u30b5\u30fc\u30d0\u540c\u58eb\u3060\u3051\u306e\u3084\u308a\u3068\u308a** \u3067\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16, 'subgraphTitleMargin': 8}}}%%\nflowchart LR\n    subgraph pub[\"\u30d6\u30e9\u30a6\u30b6\u5074\uff08\u30e6\u30fc\u30b6\u30fc\u304b\u3089\u898b\u3048\u308b\uff09\"]\n        B1[\"\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u30ed\u30b0\u30a4\u30f3\u753b\u9762\"]\n        B2[\"\u30b3\u30fc\u30eb\u30d0\u30c3\u30af URL \u306b\u4ed8\u304f<br/>\u8a8d\u53ef\u30b3\u30fc\u30c9\uff08code\uff09\"]\n    end\n    subgraph prv[\"\u30b5\u30fc\u30d0\u540c\u58eb\uff08\u30e6\u30fc\u30b6\u30fc\u306f\u76f4\u63a5\u898b\u306a\u3044\uff09\"]\n        P1[\"\u30c8\u30fc\u30af\u30f3\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\"]\n        P2[\"\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\"]\n    end\n    B1 --> B2\n    B2 --> P1\n    P1 --> P2\n```\n\n---\n\n## \u899a\u3048\u3066\u304a\u304f\u3068\u3088\u3044\u30dd\u30a4\u30f3\u30c8\uff08\u8d85\u8981\u7d04\uff09\n\n1. **\u8a8d\u53ef\u30b3\u30fc\u30c9** \u2026 \u5bff\u547d\u304c\u77ed\u304f\u3001**\u305d\u306e\u307e\u307e\u3067\u306f API \u3092\u547c\u3079\u306a\u3044**\u3002\u4e3b\u306b **\u30ea\u30c0\u30a4\u30ec\u30af\u30c8 URL** \u7d4c\u7531\u3067\u30a2\u30d7\u30ea\u306b\u5c4a\u304f\u3002\n2. **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3** \u2026 **API \u30b5\u30fc\u30d0\u304c\u30ea\u30af\u30a8\u30b9\u30c8\u3092\u8a31\u53ef\u3059\u308b**\u305f\u3081\u306b\u4f7f\u3046\u3002\u5178\u578b\u3067\u306f **\u30c8\u30fc\u30af\u30f3\u5fdc\u7b54**\u3067\u30a2\u30d7\u30ea\u304c\u53d7\u3051\u53d6\u308b\u3002\n3. **state** \u2026 \u56f3\u306e\u8a8d\u53ef URL \u306b\u542b\u3081\u3066\u3044\u307e\u3059\u3002\u5b9f\u88c5\u3067\u306f **CSRF \u5bfe\u7b56**\u3068\u3057\u3066\u3001\u30bb\u30c3\u30b7\u30e7\u30f3\u7b49\u3068\u7a81\u304d\u5408\u308f\u305b\u3066\u4e00\u81f4\u3092\u78ba\u8a8d\u3059\u308b\u3053\u3068\u304c\u591a\u3044\u3067\u3059\u3002\n4. **\u516c\u958b\u30af\u30e9\u30a4\u30a2\u30f3\u30c8**\uff08\u30cd\u30a4\u30c6\u30a3\u30d6\u30a2\u30d7\u30ea\u3084\u30d6\u30e9\u30a6\u30b6\u3060\u3051\u306e SPA \u306a\u3069\uff09\u3067\u306f **PKCE** \u3092\u8ffd\u52a0\u3057\u3066\u3001\u8a8d\u53ef\u30b3\u30fc\u30c9\u306e\u53d6\u308a\u3053\u307c\u3057\u3092\u60f3\u5b9a\u3057\u305f\u653b\u6483\u306b\u5099\u3048\u308b\u69cb\u6210\u304c\u4e00\u822c\u7684\u3067\u3059\u3002\u672c README \u306e\u56f3\u306f\u5b66\u7fd2\u7528\u306b **\u6a5f\u5bc6\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\uff0b\u30d0\u30c3\u30af\u30a8\u30f3\u30c9** \u5bc4\u308a\u306e\u738b\u9053\u30d5\u30ed\u30fc\u3092\u63cf\u3044\u3066\u3044\u307e\u3059\u3002\n\n---\n\n## \u6b63\u78ba\u6027\u306b\u3064\u3044\u3066\n\n\u5b9f\u88c5\u3084\u30d7\u30ed\u30d0\u30a4\u30c0\u306b\u3088\u308a\u3001\u30c8\u30fc\u30af\u30f3\u306e\u5f62\u5f0f\uff08\u4e0d\u900f\u660e\u30c8\u30fc\u30af\u30f3 / JWT\uff09\u3001API \u30b5\u30fc\u30d0\u304c\u30c8\u30fc\u30af\u30f3\u3092\u691c\u8a3c\u3059\u308b\u65b9\u6cd5\uff08JWT \u7f72\u540d\u691c\u8a3c\u3001\u30a4\u30f3\u30c8\u30ed\u30b9\u30da\u30af\u30b7\u30e7\u30f3\u3001\u8a8d\u53ef\u30b5\u30fc\u30d0\u3068\u306e\u9023\u643a\u306a\u3069\uff09\u306f\u7570\u306a\u308a\u307e\u3059\u3002\u4e0a\u8a18\u306f **\u6982\u5ff5\u56f3**\u3068\u3057\u3066\u306e OAuth 2.0 \u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc\u306e\u6574\u7406\u3067\u3059\u3002\n"}], "grading": {"expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u306e\u4e21\u65b9\u304c\u672c\u6587\u307e\u305f\u306f\u56f3\u306b\u73fe\u308c\u308b", "passed": true, "evidence": "auth_code=True, access_token=True"}, {"text": "\u30d6\u30e9\u30a6\u30b6\u30fb\u30a2\u30d7\u30ea\u30fb\u8a8d\u53ef\u30b5\u30fc\u30d0\u30fbAPI \u30b5\u30fc\u30d0\u306e4\u8005\u304c\u8aac\u660e\u306b\u542b\u307e\u308c\u308b", "passed": true, "evidence": "\u30d6\u30e9\u30a6\u30b6=True, \u30a2\u30d7\u30ea=True, \u8a8d\u53ef\u30b5\u30fc\u30d0=True, API \u30b5\u30fc\u30d0=True"}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}, "execution_metrics": {"tool_calls": {}, "total_tool_calls": 0, "total_steps": 0, "errors_encountered": 0, "output_chars": 3299, "transcript_chars": 0}, "timing": {"executor_duration_seconds": 0.0, "grader_duration_seconds": 0.0, "total_duration_seconds": 0.0}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"overall": "Iteration 2 still uses lightweight assertions. Use the review viewer to judge whether same-layer alignment is genuinely clearer, especially for eval 1."}}}, {"id": "kubernetes-hierarchy-old_skill", "prompt": "Kubernetes \u306e Deployment / ReplicaSet / Pod / Container \u306e\u95a2\u4fc2\u3092\u8aac\u660e\u3057\u3066\u3044\u308b\u6587\u7ae0\u304c\u9577\u3059\u304e\u307e\u3059\u3002\u56f3\u3068\u77ed\u3044\u8868\u3067\u3001\u89aa\u5b50\u95a2\u4fc2\u3068\u5f79\u5272\u306e\u9055\u3044\u304c\u3059\u3050\u5206\u304b\u308b\u3088\u3046\u306b\u30ea\u30e9\u30a4\u30c8\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "eval_id": 3, "outputs": [{"name": "answer.md", "type": "text", "content": "# Deployment / ReplicaSet / Pod / Container \u306e\u95a2\u4fc2\n\n\u4e0b\u56f3\u306f\u3001**\u671b\u307e\u3057\u3044\u72b6\u614b\uff08\u30ec\u30d7\u30ea\u30ab\u6570\u30fb\u66f4\u65b0\uff09\u304b\u3089\u3001\u5b9f\u969b\u306b\u52d5\u304f\u30d7\u30ed\u30bb\u30b9\uff08\u30b3\u30f3\u30c6\u30ca\uff09\u307e\u3067**\u306e\u89aa\u5b50\u95a2\u4fc2\u3092\u4e0a\u304b\u3089\u4e0b\u306b\u793a\u3057\u307e\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16, 'subgraphTitleMargin': 8}}}%%\nflowchart TB\n  dep[Deployment]\n  rs[ReplicaSet]\n  pod[\"Pod\\n\uff08\u540c\u4e00\u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u306e Pod \u304c\u8907\u6570\uff09\"]\n  ctr[\"Container\\n\uff081 Pod \u306b 1 \u500b\u4ee5\u4e0a\uff09\"]\n\n  dep -->|\"\u4e16\u4ee3\u7ba1\u7406\u30fb\u66f4\u65b0\u6226\u7565\"| rs\n  rs -->|\"\u30ec\u30d7\u30ea\u30ab\u6570\u306e\u7dad\u6301\"| pod\n  pod -->|\"\u5b9a\u7fa9\u3069\u304a\u308a\u306b\u8d77\u52d5\u30fb\u5b9f\u884c\"| ctr\n```\n\n**\u8aad\u307f\u65b9\u306e\u8981\u70b9**\n\n- **\u5171\u901a**: \u3044\u305a\u308c\u3082\u30de\u30cb\u30d5\u30a7\u30b9\u30c8\u3067\u300c\u671b\u307e\u3057\u3044\u72b6\u614b\u300d\u3092\u5ba3\u8a00\u3057\u3001\u30b3\u30f3\u30c8\u30ed\u30fc\u30e9\u304c\u5b9f\u614b\u3078\u8fd1\u3065\u3051\u308b\u3002\n- **\u5dee\u304c\u51fa\u308b\u968e\u5c64**: Deployment \u306f**\u30c7\u30d7\u30ed\u30a4\u904b\u7528**\u3001ReplicaSet \u306f**Pod \u500b\u6570\u306e\u4e00\u81f4**\u3001Pod \u306f**\u540c\u4e00\u30ce\u30fc\u30c9\u4e0a\u306e\u307e\u3068\u307e\u308a\u3068\u5171\u6709**\u3001Container \u306f**\u5b9f\u30d7\u30ed\u30bb\u30b9**\u3002\n- **\u77e2\u5370\u306e\u5411\u304d**: \u4e0a\u304b\u3089\u4e0b\u3078\u300c\u7ba1\u7406\u30fb\u751f\u6210\u306e\u4e3b\u4f53 \u2192 \u5bfe\u8c61\u300d\u3002\n\n## \u5f79\u5272\u306e\u9055\u3044\uff08\u77ed\u8868\uff09\n\n| \u30ea\u30bd\u30fc\u30b9 | \u89aa\uff08\u5178\u578b\u7684\u306a\u7ba1\u7406\u5143\uff09 | \u5f79\u5272\uff08\u4e00\u8a00\uff09 |\n| --- | --- | --- |\n| **Deployment** | \uff08\u30e6\u30fc\u30b6\u30fc\u304c\u76f4\u63a5\u5ba3\u8a00\uff09 | \u671b\u307e\u3057\u3044\u30ec\u30d7\u30ea\u30ab\u6570\u3068**\u66f4\u65b0\u65b9\u6cd5**\uff08Rolling \u7b49\uff09\u3092\u63e1\u308a\u3001**ReplicaSet \u3092\u4e16\u4ee3\u7ba1\u7406**\u3059\u308b\u3002 |\n| **ReplicaSet** | Deployment\uff08\u307e\u305f\u306f\u5358\u4f53\u5ba3\u8a00\uff09 | Pod \u30c6\u30f3\u30d7\u30ec\u30fc\u30c8\u306b**\u4e00\u81f4\u3059\u308b Pod \u304c N \u500b**\u306b\u306a\u308b\u3088\u3046\u4f5c\u6210\u30fb\u524a\u9664\u3059\u308b\u3002 |\n| **Pod** | ReplicaSet | **\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb\u5358\u4f4d**\u3002\u540c\u4e00\u30ce\u30fc\u30c9\u4e0a\u3067\u30b3\u30f3\u30c6\u30ca\u3092\u675f\u306d\u3001\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30fb\u30b9\u30c8\u30ec\u30fc\u30b8\u7b49\u3092\u5171\u6709\u3057\u3046\u308b\u3002 |\n| **Container** | Pod \u306e spec | **\u5b9f\u884c\u5358\u4f4d**\u3002\u30a4\u30e1\u30fc\u30b8\u306b\u57fa\u3065\u304d\u30d7\u30ed\u30bb\u30b9\u3092\u52d5\u304b\u3059\uff08Init \u30b3\u30f3\u30c6\u30ca\u306f\u8d77\u52d5\u9806\u306e\u88dc\u52a9\uff09\u3002 |\n\n**\u88dc\u8db3**: \u30ed\u30fc\u30ea\u30f3\u30b0\u66f4\u65b0\u3067\u306f Deployment \u304c**\u65b0\u3057\u3044 ReplicaSet \u3092\u8ffd\u52a0**\u3057\u3064\u3064\u53e4\u3044 ReplicaSet \u306e Pod \u3092\u6e1b\u3089\u3059\u305f\u3081\u3001\u77ed\u6642\u9593\u3060\u3051 ReplicaSet \u304c\u8907\u6570\u4e16\u4ee3\u5b58\u5728\u3059\u308b\u3053\u3068\u304c\u3042\u308b\u3002\u56f3\u306f\u300c\u8ad6\u7406\u4e0a\u306e\u89aa\u5b50\u300d\u3068\u300c1 Pod \u5185\u306b\u8907\u6570\u30b3\u30f3\u30c6\u30ca\u304c\u3042\u308a\u3046\u308b\u300d\u3053\u3068\u306b\u30d5\u30a9\u30fc\u30ab\u30b9\u3057\u3066\u3044\u308b\u3002\n"}], "grading": {"expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "Markdown \u306e\u8868\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found markdown table syntax."}, {"text": "Deployment\u30fbReplicaSet\u30fbPod\u30fbContainer \u306e4\u8a9e\u304c\u3059\u3079\u3066\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Deployment=True, ReplicaSet=True, Pod=True, Container=True"}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}, "execution_metrics": {"tool_calls": {}, "total_tool_calls": 0, "total_steps": 0, "errors_encountered": 0, "output_chars": 1198, "transcript_chars": 0}, "timing": {"executor_duration_seconds": 0.0, "grader_duration_seconds": 0.0, "total_duration_seconds": 0.0}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"overall": "Iteration 2 still uses lightweight assertions. Use the review viewer to judge whether same-layer alignment is genuinely clearer, especially for eval 1."}}}, {"id": "kubernetes-hierarchy-with_skill", "prompt": "Kubernetes \u306e Deployment / ReplicaSet / Pod / Container \u306e\u95a2\u4fc2\u3092\u8aac\u660e\u3057\u3066\u3044\u308b\u6587\u7ae0\u304c\u9577\u3059\u304e\u307e\u3059\u3002\u56f3\u3068\u77ed\u3044\u8868\u3067\u3001\u89aa\u5b50\u95a2\u4fc2\u3068\u5f79\u5272\u306e\u9055\u3044\u304c\u3059\u3050\u5206\u304b\u308b\u3088\u3046\u306b\u30ea\u30e9\u30a4\u30c8\u3057\u3066\u304f\u3060\u3055\u3044\u3002", "eval_id": 3, "outputs": [{"name": "answer.md", "type": "text", "content": "# Deployment / ReplicaSet / Pod / Container \u306e\u95a2\u4fc2\uff08\u56f3\u3068\u77ed\u3044\u8868\uff09\n\n\u4e0b\u56f3\u306f\u3001**\u30ef\u30fc\u30af\u30ed\u30fc\u30c9\u3092\u5ba3\u8a00\u304b\u3089\u5b9f\u884c\u307e\u3067\u3064\u306a\u3050\u6240\u6709\u95a2\u4fc2\uff08\u3060\u3044\u305f\u3044\u306e\u89aa\u5b50\uff09**\u3092\u4e0a\u304b\u3089\u4e0b\u306b\u793a\u3057\u307e\u3059\u3002\u30ed\u30fc\u30ea\u30f3\u30b0\u30a2\u30c3\u30d7\u30c7\u30fc\u30c8\u4e2d\u306f Deployment \u304c\u4e00\u6642\u7684\u306b **\u65b0\u3057\u3044 ReplicaSet \u3068\u53e4\u3044 ReplicaSet \u306e\u4e21\u65b9**\u3092\u6301\u3064\u3053\u3068\u304c\u3042\u308a\u307e\u3059\u304c\u3001\u5e73\u5e38\u6642\u306f\u300c1 \u672c\u306e\u9396\u300d\u3067\u8aad\u3081\u307e\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 28, 'rankSpacing': 40, 'padding': 12}}}%%\nflowchart TB\n  kh_dep[\"Deployment\"]\n  kh_rs[\"ReplicaSet\"]\n  kh_pod[\"Pod\"]\n  kh_ctr[\"Container(s)<br/>1 Pod \u306b\u8907\u6570\u53ef\"]\n\n  kh_dep --> kh_rs\n  kh_rs --> kh_pod\n  kh_pod --> kh_ctr\n```\n\n**\u8aad\u307f\u65b9\u306e\u8981\u70b9**\n\n- **\u5171\u901a**: \u3044\u305a\u308c\u3082\u300c\u671b\u307e\u3057\u3044\u72b6\u614b\u300d\u3092\u5ba3\u8a00\u3057\u3001\u4e0b\u4f4d\u304c\u305d\u308c\u3092\u6e80\u305f\u3059\u3088\u3046\u5177\u4f53\u7269\uff08Pod\u30fb\u30d7\u30ed\u30bb\u30b9\uff09\u3092\u4f5c\u308b\u3002\n- **\u5206\u304b\u308c\u76ee**: **Deployment** \u306f\u66f4\u65b0\u6226\u7565\u3084\u5c65\u6b74\u307e\u3067\u9762\u5012\u3092\u898b\u308b\u3002**ReplicaSet** \u306f\u300c\u500b\u6570\u5408\u308f\u305b\u300d\u306b\u7279\u5316\u3002**Pod** \u306f\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb\u3068\u5171\u6709\u30ea\u30bd\u30fc\u30b9\u306e\u5883\u754c\u3002**Container** \u304c\u5b9f\u969b\u306e\u5b9f\u884c\u4f53\u3002\n- **\u77e2\u5370**: \u4e0a\u304c\u4e0b\u3092**\u6240\u6709\u30fb\u7ba1\u7406**\u3059\u308b\u5411\u304d\uff08\u4f8b\u5916\u3084\u4e00\u6642\u7684\u306a\u4e8c\u91cd RS \u306f\u672c\u6587\u6ce8\u8a18\u306e\u3068\u304a\u308a\uff09\u3002\n\n| \u5bfe\u8c61 | \u76f4\u63a5\u306e\u89aa\uff08\u5178\u578b\uff09 | \u5f79\u5272\uff08\u9055\u3044\u306e\u82af\uff09 |\n| --- | --- | --- |\n| **Deployment** | \uff08\u3053\u306e\u8aac\u660e\u3067\u306f\u6700\u4e0a\u4f4d\uff09 | \u671b\u307e\u3057\u3044\u30ec\u30d7\u30ea\u30ab\u6570\u30fb\u30a4\u30e1\u30fc\u30b8\u306a\u3069\u3092\u5ba3\u8a00\u3057\u3001**\u30ed\u30fc\u30eb\u30a2\u30a6\u30c8/\u30ed\u30fc\u30eb\u30d0\u30c3\u30af**\u3067 ReplicaSet \u3092\u6bb5\u968e\u7684\u306b\u5207\u308a\u66ff\u3048\u308b |\n| **ReplicaSet** | Deployment | **\u6307\u5b9a\u500b\u6570\u306e Pod** \u304c\u52d5\u3044\u3066\u3044\u308b\u72b6\u614b\u3092\u7dad\u6301\u3059\u308b\uff08\u30b9\u30b1\u30fc\u30eb\u306e\u300c\u6570\u300d\u306e\u5b88\u308a\u624b\uff09 |\n| **Pod** | ReplicaSet | \u540c\u4e00\u30ce\u30fc\u30c9\u4e0a\u306e**\u6700\u5c0f\u30c7\u30d7\u30ed\u30a4\u5358\u4f4d**\u3002IP \u3084\u30dc\u30ea\u30e5\u30fc\u30e0\u306a\u3069\u3092\u30b3\u30f3\u30c6\u30ca\u9593\u3067\u5171\u6709\u3057\u3046\u308b |\n| **Container** | Pod \u5185\u306e\u5b9a\u7fa9 | **\u5b9f\u969b\u306b\u52d5\u304f\u30d7\u30ed\u30bb\u30b9**\u3002\u30a4\u30e1\u30fc\u30b8\u304b\u3089\u8d77\u52d5\u3057\u3001CPU/\u30e1\u30e2\u30ea\u5236\u9650\u306a\u3069\u306e\u5358\u4f4d\u306b\u3082\u306a\u308b |\n"}], "grading": {"expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "Markdown \u306e\u8868\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found markdown table syntax."}, {"text": "Deployment\u30fbReplicaSet\u30fbPod\u30fbContainer \u306e4\u8a9e\u304c\u3059\u3079\u3066\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Deployment=True, ReplicaSet=True, Pod=True, Container=True"}], "summary": {"passed": 3, "failed": 0, "total": 3, "pass_rate": 1.0}, "execution_metrics": {"tool_calls": {}, "total_tool_calls": 0, "total_steps": 0, "errors_encountered": 0, "output_chars": 1083, "transcript_chars": 0}, "timing": {"executor_duration_seconds": 0.0, "grader_duration_seconds": 0.0, "total_duration_seconds": 0.0}, "claims": [], "user_notes_summary": {"uncertainties": [], "needs_review": [], "workarounds": []}, "eval_feedback": {"overall": "Iteration 2 still uses lightweight assertions. Use the review viewer to judge whether same-layer alignment is genuinely clearer, especially for eval 1."}}}], "previous_feedback": {}, "previous_outputs": {"vm-container-comparison-with_skill": [{"name": "answer.md", "type": "text", "content": "# README \u5dee\u3057\u66ff\u3048\u6848: \u300c\u30b3\u30f3\u30c6\u30ca vs \u4eee\u60f3\u30de\u30b7\u30f3\uff08VM\uff09\u300d\u7bc0\n\n\u3053\u306e\u30d6\u30ed\u30c3\u30af\u306f `foundation/01-what-is-docker/README.md` \u306e\u300c### \u30b3\u30f3\u30c6\u30ca vs \u4eee\u60f3\u30de\u30b7\u30f3\uff08VM\uff09\u300d\u304b\u3089\u300c\u5206\u96e2\u30ec\u30d9\u30eb\u306e\u9055\u3044\u300d\u5468\u308a\u307e\u3067\u3092\u7f6e\u304d\u63db\u3048\u308b\u60f3\u5b9a\u306e**\u81ea\u5df1\u5b8c\u7d50\u3057\u305f\u539f\u7a3f**\u3067\u3059\uff08\u30ea\u30dd\u30b8\u30c8\u30ea\u672c\u4f53\u306f\u5909\u66f4\u3057\u3066\u3044\u307e\u305b\u3093\uff09\u3002\n\n---\n\n## \u3053\u306e\u7bc0\u306e\u8aad\u307f\u9806\uff08\u304a\u3059\u3059\u3081\uff09\n\n1. **\u6bd4\u8f03\u8868**\u3067\u300c\u6570\u5024\u30fb\u611f\u899a\u306e\u5dee\u300d\uff08\u8d77\u52d5\u6642\u9593\u30fb\u30b5\u30a4\u30ba\u306a\u3069\uff09\u3092\u63b4\u3080\u3002  \n2. **\u56f31\uff08\u5de6\u53f3\u30fbLR\uff09**\u3067\u300c\u5171\u901a\u306e\u72d9\u3044 \u2192 \u5206\u304b\u308c\u76ee \u2192 \u6700\u7d42\u7684\u306b\u540c\u3058\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u300d\u306e\u6d41\u308c\u3092\u898b\u308b\u3002  \n3. **\u56f32\u30fb\u56f33\uff08\u305d\u308c\u305e\u308c\u7e26\u30fbTB\uff09**\u3067\u3001VM \u3068\u30b3\u30f3\u30c6\u30ca\u306e**\u7a4d\u307f\u91cd\u306d\u3060\u3051**\u3092\u500b\u5225\u306b\u78ba\u8a8d\u3059\u308b\uff08\u30b5\u30d6\u30b0\u30e9\u30d5\u540c\u58eb\u306e\u91cd\u306a\u308a\u3092\u907f\u3051\u308b\u305f\u3081**2\u679a\u306b\u5206\u5272**\uff09\u3002  \n4. **\u5171\u901a\u70b9 / \u5dee\u5206\u306e\u7b87\u6761\u66f8\u304d**\u3067\u982d\u306e\u4e2d\u3092\u6574\u7406\u3059\u308b\u3002\n\n---\n\n### \u30b3\u30f3\u30c6\u30ca vs \u4eee\u60f3\u30de\u30b7\u30f3\uff08VM\uff09\n\n| | \u30b3\u30f3\u30c6\u30ca | \u4eee\u60f3\u30de\u30b7\u30f3 |\n|---|---|---|\n| \u8d77\u52d5\u6642\u9593 | \u79d2\u5358\u4f4d | \u5206\u5358\u4f4d |\n| \u30b5\u30a4\u30ba | MB \u5358\u4f4d | GB \u5358\u4f4d |\n| \u5206\u96e2\u30ec\u30d9\u30eb | \u30d7\u30ed\u30bb\u30b9\u3068 Linux \u540d\u524d\u7a7a\u9593\u306a\u3069\uff08**\u30ab\u30fc\u30cd\u30eb\u306f\u5171\u6709**\uff09 | \u30b2\u30b9\u30c8 OS \u3054\u3068\uff08**\u30ab\u30fc\u30cd\u30eb\u3082\u5225**\uff09 |\n| \u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9 | \u5c0f\u3055\u3044 | \u5927\u304d\u3044 |\n\n#### \u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9\u3068\u306f\uff1f\n\n**\u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9**\u3068\u306f\u3001\u300c\u30a2\u30d7\u30ea\u3092\u52d5\u304b\u3059\u300d\u3068\u3044\u3046\u672c\u6765\u306e\u76ee\u7684\u306e\u307b\u304b\u306b\u3001\u4ed5\u7d44\u307f\u5074\u304c\u4f59\u5206\u306b\u6d88\u8cbb\u3059\u308b\u30b3\u30b9\u30c8\u306e\u3053\u3068\u3067\u3059\u3002\u305f\u3068\u3048\u3070 **CPU\u30fb\u30e1\u30e2\u30ea\u30fb\u30c7\u30a3\u30b9\u30af\u5bb9\u91cf** \u306e\u8ffd\u52a0\u6d88\u8cbb\u3001**\u8d77\u52d5\u306b\u304b\u304b\u308b\u6642\u9593**\u3001**\u66f4\u65b0\u3084\u30d1\u30c3\u30c1\u306e\u5bfe\u8c61\u306b\u306a\u308b OS \u306e\u6570** \u306a\u3069\u304c\u542b\u307e\u308c\u307e\u3059\u3002VM \u306f\u30b2\u30b9\u30c8 OS \u5168\u4f53\u3092\u8f09\u305b\u308b\u305f\u3081\u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9\u304c\u5927\u304d\u304f\u3001\u30b3\u30f3\u30c6\u30ca\u306f\u30db\u30b9\u30c8\u3068\u30ab\u30fc\u30cd\u30eb\u3092\u5171\u6709\u3059\u308b\u305f\u3081\u4e00\u822c\u306b\u5c0f\u3055\u304f\u306a\u308a\u307e\u3059\uff08\u305f\u3060\u3057\u7528\u9014\u3084\u8a2d\u5b9a\u306b\u3088\u3063\u3066\u5909\u308f\u308a\u307e\u3059\uff09\u3002\n\n#### \u5206\u96e2\u30ec\u30d9\u30eb\u306e\u9055\u3044\uff08\u56f3\u3067\u6bd4\u8f03\uff09\n\n\u4e0b\u306e**\u56f31**\u306f\u3001**\u5de6\u304b\u3089\u53f3**\u306b\u8aad\u307f\u307e\u3059\u3002\u5de6\u7aef\u300c\u5171\u901a\u2460\u300d\u306f\u4e21\u65b9\u5f0f\u306e**\u540c\u3058\u72d9\u3044**\u3001\u53f3\u7aef\u300c\u5171\u901a\u2462\u300d\u306f**\u3069\u3061\u3089\u3082\u6700\u7d42\u7684\u306b\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u3067\u5b9f\u884c\u3055\u308c\u308b**\u3053\u3068\u3067\u3059\u3002\u4e2d\u592e\u306e\u5de6\u53f3\u306f\u300c\u540c\u6642\u306b\u4e21\u65b9\u3092\u7a4d\u3080\u300d\u3067\u306f\u306a\u304f\u3001**\u4ee3\u8868\u7684\u306a\u7a4d\u307f\u65b9\u306e\u5bfe\u6bd4**\u3067\u3059\u3002\n\n**\u5206\u304b\u308c\u76ee\uff08\u2461\uff09**\u306f\u4e00\u8a00\u3067\u3044\u3046\u3068\u3001**\u30ab\u30fc\u30cd\u30eb\u3092\u300cVM \u3054\u3068\u306b\u5897\u3084\u3059\u300d\u304b\u300c\u30b3\u30f3\u30c6\u30ca\u5168\u4f53\u30671\u3064\u5171\u6709\u3059\u308b\u300d\u304b**\u3067\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 36, 'rankSpacing': 44, 'padding': 20, 'subgraphTitleMargin': 12}}}%%\nflowchart LR\n  GOAL[\"\u5171\u901a\u2460<br/>\u72d9\u3044\u306f\u540c\u3058<br/>1\u53f0\u3067\u30a2\u30d7\u30ea\u3092\u5206\u96e2\u7a3c\u50cd\"]\n\n  subgraph VM[\"VM\uff08\u2461\u306e\u7247\u65b9\uff09\"]\n    direction TB\n    VAPP[\"\u30a2\u30d7\u30ea\uff08\u8907\u6570\uff09\"] --> VGUEST[\"\u30b2\u30b9\u30c8OS<br/>\u30ab\u30fc\u30cd\u30eb\u3082VM\u3054\u3068\"]\n    VGUEST --> VHV[\"\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\"]\n  end\n\n  subgraph CT[\"\u30b3\u30f3\u30c6\u30ca\uff08\u2461\u306e\u7247\u65b9\uff09\"]\n    direction TB\n    CAPP[\"\u30a2\u30d7\u30ea\uff08\u8907\u6570\uff09\"] --> CRT[\"\u30b3\u30f3\u30c6\u30ca\u30e9\u30f3\u30bf\u30a4\u30e0<br/>\u540d\u524d\u7a7a\u9593\u30fbcgroups \u7b49\"]\n    CRT --> CKERN[\"\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb<br/>1\u3064\u3092\u5171\u6709\"]\n  end\n\n  HW[\"\u5171\u901a\u2462<br/>\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\"]\n\n  GOAL --> VAPP\n  GOAL --> CAPP\n  VHV --> HW\n  CKERN --> HW\n```\n\n**\u56f32\u30fb\u56f33**\u306f\u3001\u56f31\u306e\u5de6\u53f3\u305d\u308c\u305e\u308c\u3092**\u7e26\u65b9\u5411\u3060\u3051**\u306b\u629c\u304d\u51fa\u3057\u305f\u3082\u306e\u3067\u3059\uff08\u4e26\u5217\u30b5\u30d6\u30b0\u30e9\u30d5\u30921\u679a\u306e\u7e26\u30d5\u30ed\u30fc\u306b\u8a70\u3081\u8fbc\u307e\u305a\u3001**\u30bf\u30a4\u30c8\u30eb\u5e2f\u3068\u30ce\u30fc\u30c9\u306e\u91cd\u306a\u308a**\u3092\u907f\u3051\u307e\u3059\uff09\u3002\n\n**VM \u5074\u306e\u7a4d\u307f\u91cd\u306d\uff08\u4e0a\u2192\u4e0b\uff09**\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16}}}%%\nflowchart TB\n  V2A[\"\u30a2\u30d7\u30ea A\"] --> V2GA[\"\u30b2\u30b9\u30c8 OS A<br/>\uff08\u72ec\u81ea\u30ab\u30fc\u30cd\u30eb\uff09\"]\n  V2B[\"\u30a2\u30d7\u30ea B\"] --> V2GB[\"\u30b2\u30b9\u30c8 OS B<br/>\uff08\u72ec\u81ea\u30ab\u30fc\u30cd\u30eb\uff09\"]\n  V2GA --> V2HV[\"\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\"]\n  V2GB --> V2HV\n  V2HV --> V2HW[\"\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\"]\n```\n\n**\u30b3\u30f3\u30c6\u30ca\u5074\u306e\u7a4d\u307f\u91cd\u306d\uff08\u4e0a\u2192\u4e0b\uff09**\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16}}}%%\nflowchart TB\n  C2A[\"\u30a2\u30d7\u30ea A\"] --> C2RT[\"\u30b3\u30f3\u30c6\u30ca\u30e9\u30f3\u30bf\u30a4\u30e0<br/>\uff08\u5206\u96e2\u306e\u898b\u305b\u65b9\uff09\"]\n  C2B[\"\u30a2\u30d7\u30ea B\"] --> C2RT\n  C2RT --> C2K[\"\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb\uff081\u3064\uff09\"]\n  C2K --> C2HW[\"\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\"]\n```\n\n**\u5171\u901a\u70b9\uff08\u5148\u306b\u62bc\u3055\u3048\u308b\uff09**\n\n- **\u76ee\u7684**: 1 \u53f0\u306e\u30de\u30b7\u30f3\u4e0a\u3067\u30a2\u30d7\u30ea\u540c\u58eb\u3092**\u5206\u96e2\u3057\u305f\u307e\u307e**\u52d5\u304b\u3059\uff08\u56f31 \u306e\u300c\u5171\u901a\u2460\u300d\uff09\u3002  \n- **\u6700\u7d42\u5b9f\u884c\u5834\u6240**: \u3069\u3061\u3089\u3082\u547d\u4ee4\u306f**\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2**\u4e0a\u3067\u52d5\u304f\uff08\u56f31 \u306e\u300c\u5171\u901a\u2462\u300d\uff09\u3002  \n- **\u30e6\u30fc\u30b6\u30fc\u8996\u70b9\u306e\u4fa1\u5024**: \u300c\u74b0\u5883\u3092\u307e\u3068\u3081\u3066\u6301\u3061\u904b\u3073\u3001\u5225\u30de\u30b7\u30f3\u3067\u3082\u540c\u3058\u3088\u3046\u306b\u52d5\u304b\u3059\u300d\u3068\u3044\u3046\u767a\u60f3\u306b\u8fd1\u3044\u3002\n\n**\u5dee\u5206\uff08\u3053\u3053\u304b\u3089\u5148\u304c\u9055\u3046\uff09**\n\n| \u89b3\u70b9 | VM | \u30b3\u30f3\u30c6\u30ca |\n|---|---|---|\n| **\u30ab\u30fc\u30cd\u30eb** | \u30b2\u30b9\u30c8 OS \u3054\u3068\u306b**\u5225\u30ab\u30fc\u30cd\u30eb** | **\u30db\u30b9\u30c8\u30681\u3064\u306e\u30ab\u30fc\u30cd\u30eb\u3092\u5171\u6709** |\n| **\u5206\u96e2\u306e\u4e3b\u306a\u5883\u754c** | \u300c\u5225\u30de\u30b7\u30f3\u306b\u8fd1\u3044\u300d\u5f37\u3044\u5206\u96e2\uff08\u30b2\u30b9\u30c8 OS \u5358\u4f4d\uff09 | \u540d\u524d\u7a7a\u9593\u30fbcgroups \u7b49\uff08**\u30ab\u30fc\u30cd\u30eb\u306f\u5171\u6709**\uff09 |\n| **\u5178\u578b\u30c8\u30ec\u30fc\u30c9\u30aa\u30d5** | \u91cd\u3044\u30fb\u5927\u304d\u3044\u304c\u5206\u96e2\u306f\u5f37\u3081 | \u8efd\u3044\u30fb\u5c0f\u3055\u3044\u304c\u8105\u5a01\u30e2\u30c7\u30eb\u3084\u8981\u4ef6\u6b21\u7b2c\u3067\u9078\u5b9a\u304c\u5909\u308f\u308b |\n\n\u307e\u3068\u3081\u308b\u3068\u3001\u30b3\u30f3\u30c6\u30ca\u306f VM \u3088\u308a **\u8efd\u304f\u30fb\u901f\u304f\u30fb\u30a4\u30e1\u30fc\u30b8\u3082\u5c0f\u3055\u304f\u306a\u308a\u3084\u3059\u3044**\u3067\u3059\u3002\u305d\u306e\u4ee3\u308f\u308a\u3001\u5206\u96e2\u306e\u8a2d\u8a08\uff08\u30ab\u30fc\u30cd\u30eb\u5171\u6709\uff09\u304c VM \u3068\u7570\u306a\u308b\u305f\u3081\u3001\u8105\u5a01\u30e2\u30c7\u30eb\u3084\u30b3\u30f3\u30d7\u30e9\u30a4\u30a2\u30f3\u30b9\u306e\u8981\u4ef6\u306b\u5fdc\u3058\u3066\u4f7f\u3044\u5206\u3051\u307e\u3059\u3002\n\n---\n\n## \u89aa\u30a8\u30fc\u30b8\u30a7\u30f3\u30c8\u5411\u3051\u30e1\u30e2\n\n- \u5143 README \u306e `flowchart TB` \u5185**\u5de6\u53f3\u4e26\u5217\u30b5\u30d6\u30b0\u30e9\u30d5**\u306f\u3001\u30ec\u30f3\u30c0\u30e9\u306b\u3088\u3063\u3066\u30bf\u30a4\u30c8\u30eb\u5e2f\u3068\u30ce\u30fc\u30c9\u304c**\u91cd\u306a\u308a\u3084\u3059\u3044**\u305f\u3081\u3001**\u56f31 \u3092 `flowchart LR`\u3001\u8a73\u7d30\u3092\u56f32\u30fb\u56f33 \u306e `flowchart TB` \u306b\u5206\u5272**\u3059\u308b\u5f62\u306b\u5909\u66f4\u3057\u3066\u3044\u307e\u3059\u3002  \n- \u56f31 \u3067\u306f\u300c\u5171\u901a\u2460\u300d\u304b\u3089 **VM\u30fb\u30b3\u30f3\u30c6\u30ca\u4e21\u65b9\u306e\u30a2\u30d7\u30ea\u5c64**\u3078\u77e2\u5370\u3092\u5f15\u304d\u3001**\u8aa4\u8aad\uff08\u7247\u65b9\u3060\u3051\u304c\u72d9\u3044\u306e\u5bfe\u8c61\uff09**\u3092\u907f\u3051\u3066\u3044\u307e\u3059\u3002\n"}], "vm-container-comparison-without_skill": [{"name": "answer.md", "type": "text", "content": "# \u30b3\u30f3\u30c6\u30ca\u3068\u4eee\u60f3\u30de\u30b7\u30f3\uff08VM\uff09\u2014 \u5171\u901a\u70b9\u3068\u5dee\u5206\n\n## \u4e00\u76ee\u3067\u6bd4\u8f03\n\n| \u89b3\u70b9 | \u5171\u901a | VM \u5074 | \u30b3\u30f3\u30c6\u30ca\u5074 |\n|------|------|--------|------------|\n| **\u72d9\u3044** | 1 \u53f0\u306e\u30de\u30b7\u30f3\u4e0a\u3067\u30a2\u30d7\u30ea\u540c\u58eb\u3092\u5206\u96e2\u3057\u3066\u52d5\u304b\u3059 | \u30b2\u30b9\u30c8 OS \u3054\u3068\u306b\u300c\u5225\u30de\u30b7\u30f3\u306b\u8fd1\u3044\u300d\u5f37\u3044\u5206\u96e2 | \u30ab\u30fc\u30cd\u30eb\u306f 1 \u3064\u5171\u6709\u3057\u3001\u540d\u524d\u7a7a\u9593\u7b49\u3067\u898b\u3048\u65b9\u3092\u5206\u3051\u308b |\n| **\u6700\u7d42\u5b9f\u884c** | \u3069\u3061\u3089\u3082\u547d\u4ee4\u306f\u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u3067\u5b9f\u884c\u3055\u308c\u308b | \u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\u7d4c\u7531\u3067 HW \u3078 | \u5171\u6709\u30ab\u30fc\u30cd\u30eb\u7d4c\u7531\u3067 HW \u3078 |\n| **\u5178\u578b\u30b3\u30b9\u30c8** | \uff08\u6bd4\u8f03\u306e\u8ef8\uff09 | \u8d77\u52d5\u30fb\u5bb9\u91cf\u30fbOS \u30d1\u30c3\u30c1\u5bfe\u8c61\u304c\u91cd\u3081 | \u8efd\u91cf\u30fb\u9ad8\u901f\u306b\u306a\u308a\u3084\u3059\u3044\uff08\u8981\u4ef6\u6b21\u7b2c\uff09 |\n\n**\u4e00\u6587\u3067\u5dee\u5206:** VM \u306f **\u30ab\u30fc\u30cd\u30eb\u3082\u542b\u3081\u305f OS \u3092 VM \u3054\u3068\u306b\u7a4d\u3080**\u3002\u30b3\u30f3\u30c6\u30ca\u306f **\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb 1 \u3064\u3092\u5171\u6709**\u3057\u3001\u305d\u306e\u4e0a\u3067\u30e9\u30f3\u30bf\u30a4\u30e0\u304c\u30d7\u30ed\u30bb\u30b9\u74b0\u5883\u3092\u5206\u3051\u308b\u3002\n\n---\n\n## \u56f3 1: \u5171\u901a\u70b9\uff08\u4e0a\uff09\u2192 \u5206\u304b\u308c\u76ee\uff08\u5de6\u53f3\uff09\u2192 \u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\uff08\u4e0b\uff09\n\n\u77e2\u5370\u306f **\u30c7\u30fc\u30bf\u306e\u6d41\u308c\u3068\u3044\u3046\u3088\u308a\u300c\u3069\u3053\u306b\u4f55\u304c\u7a4d\u307e\u308c\u308b\u304b\u300d** \u306e\u7a4d\u307f\u91cd\u306d\u3067\u3059\u3002`goal` \u304b\u3089\u5de6\u53f3\u3078\u5e83\u304c\u308b\u7dda\u306f 1 \u672c\u305a\u3064\u306b\u3057\u3066\u3001\u30ce\u30fc\u30c9\u306e\u91cd\u306a\u308a\u3092\u907f\u3051\u3066\u3044\u307e\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 20}}}%%\nflowchart TB\n  goal[\"\u5171\u901a\u2460 \u72d9\u3044\u306f\u540c\u3058<br/>1\u53f0\u3067\u8907\u6570\u30a2\u30d7\u30ea\u3092\u5206\u96e2\u3057\u3066\u7a3c\u50cd\"]\n\n  subgraph fork[\"\u2461 \u5206\u304b\u308c\u76ee\uff08\u4ee3\u8868\u4f8b\u3092\u4e26\u3079\u305f\u6bd4\u8f03\u30fb\u540c\u6642\u904b\u7528\u306e\u610f\u5473\u3067\u306f\u306a\u3044\uff09\"]\n    direction LR\n\n    subgraph VM[\"VM: \u30b2\u30b9\u30c8\u3054\u3068\u306b OS\uff0b\u30ab\u30fc\u30cd\u30eb\"]\n      direction TB\n      vApps[\"\u30a2\u30d7\u30ea A / B\"] --> vGuests[\"\u30b2\u30b9\u30c8 OS\uff08\u30ab\u30fc\u30cd\u30eb\u542b\u3080\uff09\u00d7 \u53f0\u6570\u5206\"]\n      vGuests --> vHV[\"\u30cf\u30a4\u30d1\u30fc\u30d0\u30a4\u30b6\u30fc\"]\n    end\n\n    subgraph CT[\"\u30b3\u30f3\u30c6\u30ca: \u30ab\u30fc\u30cd\u30eb\u306f\u5171\u6709\"]\n      direction TB\n      cApps[\"\u30a2\u30d7\u30ea A / B\"] --> cRT[\"\u30b3\u30f3\u30c6\u30ca\u30e9\u30f3\u30bf\u30a4\u30e0<br/>\uff08\u540d\u524d\u7a7a\u9593\u30fbcgroups \u7b49\uff09\"]\n      cRT --> cK[\"\u30db\u30b9\u30c8\u306e\u30ab\u30fc\u30cd\u30eb\uff081\u3064\uff09\"]\n    end\n  end\n\n  hw[\"\u5171\u901a\u2462 \u7269\u7406\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2<br/>\uff08\u3069\u3061\u3089\u306e\u7d4c\u8def\u3082\u6700\u7d42\u7684\u306b\u3053\u3053\uff09\"]\n\n  goal --> VM\n  goal --> CT\n  vHV --> hw\n  cK --> hw\n```\n\n**\u8aad\u307f\u65b9:** \u4e0a\u306e\u300c\u5171\u901a\u2460\u300d\u304b\u3089\u5de6\u53f3\u306b\u5206\u5c90\u3057\u3001**\u5de6\u306f\u30ab\u30fc\u30cd\u30eb\u304c\u8907\u6570\uff08VM \u3054\u3068\uff09**\u3001**\u53f3\u306f\u30ab\u30fc\u30cd\u30eb\u304c 1 \u3064**\u3068\u898b\u6bd4\u3079\u308b\u3002\u4e0b\u306e\u300c\u5171\u901a\u2462\u300d\u3067\u4e21\u65b9\u3068\u3082\u540c\u3058 HW \u306b\u884c\u304d\u7740\u304f\u3002\n\n---\n\n## \u56f3 2: \u300c\u30ab\u30fc\u30cd\u30eb\u304c\u3044\u304f\u3064\u3042\u308b\u304b\u300d\u3060\u3051\u629c\u304d\u51fa\u3057\n\n\u5bfe\u6bd4\u3060\u3051\u898b\u305f\u3044\u3068\u304d\u7528\u3002\u5de6\u53f3\u306f\u540c\u3058\u30e9\u30f3\u30af\u306b\u4e26\u3079\u3001\u7dda\u306e\u4ea4\u5dee\u3092\u6e1b\u3089\u3057\u3066\u3044\u307e\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 36, 'rankSpacing': 40, 'padding': 18}}}%%\nflowchart LR\n  subgraph vmK[\"VM\uff08\u6982\u5ff5\uff09\"]\n    direction TB\n    noteVM[\"\u30a2\u30d7\u30ea A/B \u306f\u5225\u30ab\u30fc\u30cd\u30eb\u4e0a\u306e<br/>\u30b2\u30b9\u30c8 OS \u306b\u4e57\u308b\u30a4\u30e1\u30fc\u30b8\"]\n    K1[\"\u30ab\u30fc\u30cd\u30eb A\uff08\u30b2\u30b9\u30c8\u7528\uff09\"]\n    K2[\"\u30ab\u30fc\u30cd\u30eb B\uff08\u30b2\u30b9\u30c8\u7528\uff09\"]\n    noteVM --> K1\n    noteVM --> K2\n  end\n\n  subgraph ctK[\"\u30b3\u30f3\u30c6\u30ca\uff08\u6982\u5ff5\uff09\"]\n    direction TB\n    noteCT[\"\u540c\u3058\u30ab\u30fc\u30cd\u30eb\u4e0a\u3067<br/>\u74b0\u5883\u3060\u3051\u5206\u96e2\"]\n    Kshared[\"\u30ab\u30fc\u30cd\u30eb 1 \u3064\uff08\u5171\u6709\uff09\"]\n    noteCT --> Kshared\n  end\n```\n\n---\n\n## \u88dc\u8db3\uff08\u77ed\u304f\uff09\n\n- **\u30aa\u30fc\u30d0\u30fc\u30d8\u30c3\u30c9:** VM \u306f\u30b2\u30b9\u30c8 OS \u5168\u4f53\u3076\u3093\u3001CPU\u30fb\u30e1\u30e2\u30ea\u30fb\u30c7\u30a3\u30b9\u30af\u30fb\u8d77\u52d5\u6642\u9593\u30fb\u30d1\u30c3\u30c1\u5bfe\u8c61\u304c\u5897\u3048\u3084\u3059\u3044\u3002\u30b3\u30f3\u30c6\u30ca\u306f\u30ab\u30fc\u30cd\u30eb\u5171\u6709\u306e\u305f\u3081\u4e00\u822c\u306b\u5c0f\u3055\u304f\u306a\u308a\u3084\u3059\u3044\uff08\u8a2d\u5b9a\u6b21\u7b2c\uff09\u3002\n- **\u4f7f\u3044\u5206\u3051:** \u5f37\u3044\u5206\u96e2\u3084\u300c\u5225 OS \u30ab\u30fc\u30cd\u30eb\u304c\u5fc5\u8981\u300d\u306b VM\u3001\u958b\u767a\u30fb\u30c7\u30d7\u30ed\u30a4\u306e\u901f\u3055\u3068\u5bc6\u5ea6\u306b\u30b3\u30f3\u30c6\u30ca\u3001\u3068\u3044\u3046\u6574\u7406\u304c\u3088\u304f\u4f7f\u308f\u308c\u308b\u3002\u8981\u4ef6\uff08\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30fb\u30b3\u30f3\u30d7\u30e9\u30a4\u30a2\u30f3\u30b9\uff09\u3067\u6700\u9069\u89e3\u306f\u5909\u308f\u308b\u3002\n"}], "oauth-login-flow-with_skill": [{"name": "answer.md", "type": "text", "content": "# OAuth \u306e\u30ed\u30b0\u30a4\u30f3\u30d5\u30ed\u30fc\uff08\u521d\u5fc3\u8005\u5411\u3051\uff09\n\nOAuth\uff08\u3053\u3053\u3067\u306f\u4e00\u822c\u7684\u306a **\u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc**\uff09\u306f\u3001\u300c\u30d1\u30b9\u30ef\u30fc\u30c9\u3092 API \u30b5\u30fc\u30d0\u306b\u6e21\u3055\u305a\u306b\u300d\u300c\u8a8d\u53ef\u30b5\u30fc\u30d0\u304c\u767a\u884c\u3057\u305f **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3** \u3060\u3051\u3067 API \u3092\u547c\u3076\u300d\u305f\u3081\u306e\u6d41\u308c\u3067\u3059\u3002\u6b21\u306e 4 \u3064\u304c\u4e3b\u306a\u767b\u5834\u4eba\u7269\u3067\u3059\u3002\n\n| \u5f79\u5272 | \u3056\u3063\u304f\u308a\u3057\u305f\u4ed5\u4e8b |\n|------|------------------|\n| **\u30d6\u30e9\u30a6\u30b6** | \u30e6\u30fc\u30b6\u30fc\u306e\u64cd\u4f5c\u753b\u9762\u3002\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u30ed\u30b0\u30a4\u30f3\u753b\u9762\u3092\u958b\u304d\u3001\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3067\u7d50\u679c\u3092\u30a2\u30d7\u30ea\u306b\u8fd4\u3059\u3002 |\n| **\u30a2\u30d7\u30ea** | \u3042\u306a\u305f\u304c\u4f5c\u308b Web \u30a2\u30d7\u30ea\uff08\u3053\u3053\u3067\u306f **\u30b5\u30fc\u30d0\u30fc\u5074** \u304c\u30c8\u30fc\u30af\u30f3\u4ea4\u63db\u307e\u3067\u62c5\u5f53\u3059\u308b\u69cb\u6210\uff09\u3002 |\n| **\u8a8d\u53ef\u30b5\u30fc\u30d0** | \u30ed\u30b0\u30a4\u30f3\u306e\u53d7\u3051\u4ed8\u3051\u3001`\u8a8d\u53ef\u30b3\u30fc\u30c9` \u3068 `\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3` \u3092\u767a\u884c\u3059\u308b\u3002 |\n| **API \u30b5\u30fc\u30d0** | \u5b9f\u969b\u306e\u30c7\u30fc\u30bf\u3092\u8fd4\u3059\u3002`\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3` \u304c\u6b63\u3057\u3051\u308c\u3070\u30ea\u30af\u30a8\u30b9\u30c8\u3092\u51e6\u7406\u3059\u308b\u3002 |\n\n\u4e0b\u56f3\u306f\u3001**\u5de6\u304b\u3089\u53f3\u306b\u6642\u9593\u304c\u9032\u3080**\u30b7\u30fc\u30b1\u30f3\u30b9\u56f3\u3067\u3059\u3002\u77e2\u5370\u306f\u300c\u305d\u306e\u76f8\u624b\u3078 HTTP \u306a\u3069\u306e\u3084\u308a\u3068\u308a\u304c\u884c\u304f\u300d\u3053\u3068\u3092\u8868\u3057\u307e\u3059\u3002**\u8a8d\u53ef\u30b3\u30fc\u30c9**\u306f\u300c\u30ed\u30b0\u30a4\u30f3\u6210\u529f\u5f8c\u3001\u30d6\u30e9\u30a6\u30b6\u304c\u30a2\u30d7\u30ea\u306b\u623b\u308b URL \u306b\u8f09\u308b\u77ed\u3044\u4f7f\u3044\u6368\u3066\u306e\u5408\u8a00\u8449\u300d\u3001**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\u306f\u300cAPI \u3092\u547c\u3076\u3068\u304d\u306b\u6dfb\u3048\u308b\u79d8\u5bc6\u306b\u8fd1\u3044\u9375\u300d\u3060\u3068\u30a4\u30e1\u30fc\u30b8\u3057\u3066\u304f\u3060\u3055\u3044\uff08\u5b9f\u88c5\u3067\u306f\u5fc5\u305a HTTPS \u3067\u9001\u308a\u307e\u3059\uff09\u3002\n\n```mermaid\nsequenceDiagram\n    autonumber\n    actor U as \u30e6\u30fc\u30b6\u30fc\n    participant BR as \u30d6\u30e9\u30a6\u30b6\n    participant APP as \u30a2\u30d7\u30ea\uff08Web\u30b5\u30fc\u30d0\u30fc\uff09\n    participant AS as \u8a8d\u53ef\u30b5\u30fc\u30d0\n    participant API as API\u30b5\u30fc\u30d0\n\n    U->>BR: \u30ed\u30b0\u30a4\u30f3\u3092\u958b\u59cb\uff08\u4f8b: \u30dc\u30bf\u30f3\u30af\u30ea\u30c3\u30af\uff09\n    BR->>APP: \u30ed\u30b0\u30a4\u30f3\u958b\u59cb\u306e\u30ea\u30af\u30a8\u30b9\u30c8\n    APP->>BR: \u8a8d\u53ef\u30b5\u30fc\u30d0\u3078\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\uff08client_id \u7b49\u3092\u4ed8\u4e0e\uff09\n    BR->>AS: \u8a8d\u53ef\u30ea\u30af\u30a8\u30b9\u30c8\uff08/authorize \u306a\u3069\uff09\n\n    Note over AS,BR: \u30e6\u30fc\u30b6\u30fc\u304c ID/\u30d1\u30b9\u30ef\u30fc\u30c9\u3084 MFA \u3067\u30ed\u30b0\u30a4\u30f3\n    AS->>BR: \u30ed\u30b0\u30a4\u30f3\u753b\u9762\u306e\u8868\u793a\n\n    U->>AS: \u540c\u610f\u30fb\u30ed\u30b0\u30a4\u30f3\u5b8c\u4e86\n    AS->>BR: \u30a2\u30d7\u30ea\u306e redirect_uri \u3078\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\n\n    Note right of BR: \u2605 \u3053\u3053\u3067 URL \u306b\u300c\u8a8d\u53ef\u30b3\u30fc\u30c9\u300d\u304c\u4ed8\u304f<br/>\u4f8b: ?code=AUTH_CODE&state=...\n\n    BR->>APP: \u30b3\u30fc\u30eb\u30d0\u30c3\u30af\uff08\u8a8d\u53ef\u30b3\u30fc\u30c9\u3092\u30af\u30a8\u30ea\u3067\u6e21\u3059\uff09\n\n    APP->>AS: \u30c8\u30fc\u30af\u30f3\u8981\u6c42\uff08\u8a8d\u53ef\u30b3\u30fc\u30c9\uff0b\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u79d8\u5bc6\u306a\u3069\uff09\n    AS->>APP: \u30c8\u30fc\u30af\u30f3\u5fdc\u7b54\uff08JSON\uff09\n\n    Note right of APP: \u2605 \u3053\u3053\u3067\u5fdc\u7b54\u672c\u6587\u306b\u300c\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u300d<br/>\u4f8b: {\"access_token\":\"...\", ...}\n\n    APP->>API: API \u547c\u3073\u51fa\u3057\uff08Authorization: Bearer \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff09\n    API->>APP: \u4fdd\u8b77\u3055\u308c\u305f\u30c7\u30fc\u30bf\u306e\u5fdc\u7b54\n```\n\n## \u8aad\u307f\u65b9\u306e\u88dc\u8db3\n\n- **\u5171\u901a\u3057\u3066\u901a\u308b\u9053**: \u30e6\u30fc\u30b6\u30fc\u306f\u5fc5\u305a **\u8a8d\u53ef\u30b5\u30fc\u30d0** \u3067\u672c\u4eba\u78ba\u8a8d\u3057\u3001API \u30b5\u30fc\u30d0\u306b\u76f4\u63a5\u30d1\u30b9\u30ef\u30fc\u30c9\u3092\u6e21\u3057\u307e\u305b\u3093\u3002\n- **\u5206\u304b\u308c\u76ee\uff08\u4f55\u304c\u3069\u3053\u306b\u51fa\u308b\u304b\uff09**:\n  - **\u8a8d\u53ef\u30b3\u30fc\u30c9**: \u30d6\u30e9\u30a6\u30b6\u304c\u30a2\u30d7\u30ea\u306e URL \u306b\u623b\u308b **\u305d\u306e\u77ac\u9593**\u3001\u30a2\u30c9\u30ec\u30b9\u6b04\u306e\u30af\u30a8\u30ea\uff08`?code=...`\uff09\u306b\u73fe\u308c\u307e\u3059\u3002\u5bff\u547d\u304c\u77ed\u304f\u3001**\u30d5\u30ed\u30f3\u30c8\u306b\u898b\u3048\u3066\u3082\u3059\u3050\u30b5\u30fc\u30d0\u30fc\u304c\u4f7f\u3044\u6368\u3066\u308b**\u60f3\u5b9a\u3067\u3059\u3002\n  - **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**: **\u30d6\u30e9\u30a6\u30b6\u3067\u306f\u306a\u304f**\u3001\u30a2\u30d7\u30ea\u306e\u30b5\u30fc\u30d0\u30fc\u3068\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e **\u30d0\u30c3\u30af\u30c1\u30e3\u30cd\u30eb\uff08\u30c8\u30fc\u30af\u30f3\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\uff09** \u306e\u5fdc\u7b54\u3067\u6e21\u3055\u308c\u307e\u3059\u3002\u305d\u306e\u5f8c\u3001API \u30b5\u30fc\u30d0\u3078\u306e\u30ea\u30af\u30a8\u30b9\u30c8\u306e **Authorization \u30d8\u30c3\u30c0** \u306b\u8f09\u305b\u307e\u3059\u3002\n- **\u77e2\u5370\u306e\u5411\u304d**: \u4e0a\u304b\u3089\u4e0b\u3078\u30b9\u30c6\u30c3\u30d7\u304c\u9032\u307f\u3001\u6a2a\u65b9\u5411\u306f\u300c\u8ab0\u304b\u3089\u8ab0\u3078\u30e1\u30c3\u30bb\u30fc\u30b8\u304c\u884c\u304f\u304b\u300d\u3067\u3059\u3002\n\n## \u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff08\u5bfe\u6bd4\uff09\n\n\u300c\u3069\u3061\u3089\u3082\u8a8d\u53ef\u30b5\u30fc\u30d0\u304c\u95a2\u4e0e\u3059\u308b\u304c\u3001**\u898b\u3048\u308b\u5834\u6240**\u3068**\u5f79\u5272**\u304c\u9055\u3046\u300d\u3053\u3068\u3092\u8868\u306b\u307e\u3068\u3081\u307e\u3059\u3002\n\n| | \u8a8d\u53ef\u30b3\u30fc\u30c9\uff08authorization code\uff09 | \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff08access token\uff09 |\n|---|----------------------------------|-------------------------------------|\n| **\u4e3b\u306b\u73fe\u308c\u308b\u5834\u6240** | \u30d6\u30e9\u30a6\u30b6 \u2192 \u30a2\u30d7\u30ea\u3078\u306e\u30ea\u30c0\u30a4\u30ec\u30af\u30c8 URL | \u30c8\u30fc\u30af\u30f3\u5fdc\u7b54\u306e JSON\u3001\u4ee5\u964d\u306e API \u30ea\u30af\u30a8\u30b9\u30c8\u306e\u30d8\u30c3\u30c0 |\n| **\u3060\u308c\u304c\u4e3b\u306b\u6271\u3046\u304b** | \u30a2\u30d7\u30ea\u306e\u30b5\u30fc\u30d0\u30fc\u304c\u4e00\u5ea6\u53d7\u3051\u53d6\u308a\u3001\u3059\u3050\u4ea4\u63db\u306b\u4f7f\u3046 | \u30a2\u30d7\u30ea\u304c API \u547c\u3073\u51fa\u3057\u306b\u6dfb\u3048\u308b\uff08\u516c\u958b\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u3067\u306f\u6271\u3044\u65b9\u306b\u6ce8\u610f\uff09 |\n| **\u30a4\u30e1\u30fc\u30b8** | \u300c\u30c8\u30fc\u30af\u30f3\u3068\u4ea4\u63db\u3059\u308b\u305f\u3081\u306e\u4e00\u56de\u5238\u300d | \u300cAPI \u306e\u7a93\u53e3\u3092\u958b\u3051\u308b\u9375\u300d |\n\n\u30d6\u30e9\u30a6\u30b6\u3060\u3051\u306e\u30a2\u30d7\u30ea\uff08SPA\uff09\u306a\u3069\u3067\u306f **PKCE** \u3092\u8db3\u3057\u3066\u8a8d\u53ef\u30b3\u30fc\u30c9\u306e\u76d7\u96e3\u306b\u5099\u3048\u308b\u3053\u3068\u304c\u591a\u3044\u3067\u3059\u304c\u3001\u4e0a\u56f3\u306e\u300c4 \u5f79\u8005\u306e\u3084\u308a\u3068\u308a\u300d\u3068\u300c\u30b3\u30fc\u30c9\u2192\u30c8\u30fc\u30af\u30f3\u2192API\u300d\u306e\u7b4b\u306f\u540c\u3058\u3067\u3059\u3002\n"}], "oauth-login-flow-without_skill": [{"name": "answer.md", "type": "text", "content": "# OAuth \u306e\u30ed\u30b0\u30a4\u30f3\u30d5\u30ed\u30fc\uff08\u521d\u5fc3\u8005\u5411\u3051\uff09\n\n\u3053\u306e\u6587\u66f8\u3067\u306f\u3001**\u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc\uff08Authorization Code Flow\uff09** \u3092\u4f8b\u306b\u3001\u30e6\u30fc\u30b6\u30fc\u306e\u30d6\u30e9\u30a6\u30b6\u30fb\u3042\u306a\u305f\u306e\u30a2\u30d7\u30ea\u30fb**\u8a8d\u53ef\u30b5\u30fc\u30d0**\uff08\u30ed\u30b0\u30a4\u30f3\u753b\u9762\u3092\u51fa\u3059\u5074\uff09\u30fb**API \u30b5\u30fc\u30d0**\uff08\u4fdd\u8b77\u3055\u308c\u305f\u30c7\u30fc\u30bf\u3092\u8fd4\u3059\u5074\uff09\u304c\u3069\u3046\u3084\u308a\u3068\u308a\u3059\u308b\u304b\u3092\u6574\u7406\u3057\u307e\u3059\u3002\n\n## \u767b\u5834\u3059\u308b\u7528\u8a9e\uff08\u6700\u5c0f\u9650\uff09\n\n| \u7528\u8a9e | \u3056\u3063\u304f\u308a\u610f\u5473 |\n|------|----------------|\n| **\u8a8d\u53ef\u30b5\u30fc\u30d0** | \u30e6\u30fc\u30b6\u30fc\u8a8d\u8a3c\u3068\u300c\u3053\u306e\u30a2\u30d7\u30ea\u306b\u6a29\u9650\u3092\u6e21\u3057\u3066\u3044\u3044\u304b\u300d\u306e\u540c\u610f\u3092\u6271\u3046\u3002\u30c8\u30fc\u30af\u30f3\u3092\u767a\u884c\u3059\u308b\u3002 |\n| **\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\uff08\u30a2\u30d7\u30ea\uff09** | \u30ed\u30b0\u30a4\u30f3\u30dc\u30bf\u30f3\u3092\u51fa\u3057\u3001\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u5148\u3092\u53d7\u3051\u53d6\u308a\u3001API \u3092\u547c\u3076\u30a2\u30d7\u30ea\u672c\u4f53\u3002 |\n| **API \u30b5\u30fc\u30d0\uff08\u30ea\u30bd\u30fc\u30b9\u30b5\u30fc\u30d0\uff09** | `Authorization: Bearer ...` \u306e\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u3067\u30a2\u30af\u30bb\u30b9\u3092\u8a31\u53ef\u3059\u308b\u3002 |\n| **\u8a8d\u53ef\u30b3\u30fc\u30c9\uff08authorization code\uff09** | \u4e00\u5ea6\u304d\u308a\u30fb\u77ed\u6642\u9593\u3067\u4f7f\u3046\u300c\u5f15\u304d\u63db\u3048\u5238\u300d\u3002**\u30d6\u30e9\u30a6\u30b6\u306e URL \u306b\u8f09\u3063\u3066\u8fd4\u308b**\u3053\u3068\u304c\u591a\u3044\u3002 |\n| **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\uff08access token\uff09** | API \u3092\u547c\u3076\u3068\u304d\u306b\u6dfb\u3048\u308b\u79d8\u5bc6\u306b\u8fd1\u3044\u5024\u3002**\u8a8d\u53ef\u30b5\u30fc\u30d0\u304c\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u306b\u76f4\u63a5\u6e21\u3059**\uff08\u30d6\u30e9\u30a6\u30b6\u306b\u6652\u3055\u306a\u3044\u8a2d\u8a08\u304c\u63a8\u5968\uff09\u3002 |\n\n## \u5168\u4f53\u306e\u6d41\u308c\uff08\u30b7\u30fc\u30b1\u30f3\u30b9\u56f3\uff09\n\n\u5178\u578b\u7684\u306a **\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\u4ed8\u304d Web \u30a2\u30d7\u30ea** \u306e\u5834\u5408\uff1a\u8a8d\u53ef\u30b3\u30fc\u30c9\u306e\u4ea4\u63db\u306f **\u30b5\u30fc\u30d0\u30fc\u540c\u58eb** \u3067\u884c\u3044\u3001\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u3092\u30d6\u30e9\u30a6\u30b6\u306b\u6e21\u3055\u306a\u3044\u30d1\u30bf\u30fc\u30f3\u3067\u3059\u3002\n\n```mermaid\nsequenceDiagram\n    autonumber\n    participant B as \u30d6\u30e9\u30a6\u30b6\n    participant A as \u30a2\u30d7\u30ea\uff08\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\uff09<br/>\u30d5\u30ed\u30f3\u30c8\uff0b\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\n    participant C as \u8a8d\u53ef\u30b5\u30fc\u30d0\n    participant R as API \u30b5\u30fc\u30d0\n\n    B->>A: \u30ed\u30b0\u30a4\u30f3\u3092\u958b\u59cb\n    A->>B: \u8a8d\u53ef\u30b5\u30fc\u30d0\u3078\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\uff08client_id, scope, redirect_uri \u306a\u3069\uff09\n    B->>C: \u8a8d\u53ef\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3078\u30a2\u30af\u30bb\u30b9\n    Note over B,C: \u30e6\u30fc\u30b6\u30fc\u304c ID/\u30d1\u30b9\u30ef\u30fc\u30c9\u3084 MFA \u3067\u8a8d\u8a3c\u3057\u3001\u540c\u610f\n    C->>B: redirect_uri \u3078\u30ea\u30c0\u30a4\u30ec\u30af\u30c8<br/>\u30af\u30a8\u30ea\u306b **\u8a8d\u53ef\u30b3\u30fc\u30c9** \u3092\u4ed8\u4e0e\n    B->>A: \u8a8d\u53ef\u30b3\u30fc\u30c9\u4ed8\u304d\u3067\u30a2\u30d7\u30ea\u306b\u623b\u308b\n    A->>C: \u30c8\u30fc\u30af\u30f3\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u3078 **\u8a8d\u53ef\u30b3\u30fc\u30c9** \u3092\u9001\u308a\u3001<br/>**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\uff08\u3068\u5fc5\u8981\u306a\u3089\u30ea\u30d5\u30ec\u30c3\u30b7\u30e5\u30c8\u30fc\u30af\u30f3\uff09\u3092\u53d6\u5f97\n    Note over A,C: \u3053\u3053\u306f\u30b5\u30fc\u30d0\u30fc\u540c\u58eb\u306e\u901a\u4fe1\u304c\u671b\u307e\u3057\u3044\uff08\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u30b7\u30fc\u30af\u30ec\u30c3\u30c8\u7b49\uff09\n    A->>R: API \u547c\u3073\u51fa\u3057\uff08`Authorization: Bearer **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**`\uff09\n    R-->>A: \u4fdd\u8b77\u3055\u308c\u305f\u30c7\u30fc\u30bf\n    A-->>B: \u753b\u9762\u306b\u7d50\u679c\u3092\u8868\u793a\n```\n\n## \u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u304c\u300c\u3069\u3053\u3067\u300d\u51fa\u308b\u304b\n\n```mermaid\nflowchart LR\n    subgraph step1[\"\u2460 \u8a8d\u53ef\u30b3\u30fc\u30c9\"]\n        C1[\u8a8d\u53ef\u30b5\u30fc\u30d0]\n        B1[\u30d6\u30e9\u30a6\u30b6]\n        C1 -->|\"\u30ea\u30c0\u30a4\u30ec\u30af\u30c8 URL \u306e ?code=...\"| B1\n    end\n    subgraph step2[\"\u2461 \u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\"]\n        A2[\u30a2\u30d7\u30ea\u306e\u30d0\u30c3\u30af\u30a8\u30f3\u30c9]\n        C2[\u8a8d\u53ef\u30b5\u30fc\u30d0\u306e\u30c8\u30fc\u30af\u30f3\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8]\n        A2 <-->|\"code \u3092 POST \u2192 JSON \u3067 access_token\"| C2\n    end\n    subgraph step3[\"\u2462 API \u5229\u7528\"]\n        A3[\u30a2\u30d7\u30ea]\n        R3[API \u30b5\u30fc\u30d0]\n        A3 -->|\"HTTP \u30d8\u30c3\u30c0\u306b Bearer \u30c8\u30fc\u30af\u30f3\"| R3\n    end\n    step1 --> step2 --> step3\n```\n\n- **\u8a8d\u53ef\u30b3\u30fc\u30c9**\uff1a\u30e6\u30fc\u30b6\u30fc\u64cd\u4f5c\u306e\u3042\u3068\u3001**\u30d6\u30e9\u30a6\u30b6\u7d4c\u7531\u3067** \u30a2\u30d7\u30ea\u306b\u623b\u308b URL \u306b\u8f09\u308b\uff08\u4f8b\uff1a`https://\u3042\u306a\u305f\u306e\u30a2\u30d7\u30ea/callback?code=xxx&state=yyy`\uff09\u3002\n- **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3**\uff1a**\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30af\u30e9\u30a4\u30a2\u30f3\u30c8\u60c5\u5831\u3092\u8a8d\u53ef\u30b5\u30fc\u30d0\u306b\u9001\u3063\u305f\u30ec\u30b9\u30dd\u30f3\u30b9**\u3067\u30a2\u30d7\u30ea\u304c\u53d7\u3051\u53d6\u308b\u3002\u4ee5\u964d\u3001API \u30b5\u30fc\u30d0\u3078\u306e\u30ea\u30af\u30a8\u30b9\u30c8\u306b\u4ed8\u3051\u308b\u3002\n\n## \u30b9\u30c6\u30c3\u30d7\u4e00\u89a7\uff08\u56f3\u3068\u5bfe\u5fdc\uff09\n\n1. \u30a2\u30d7\u30ea\u304c\u8a8d\u53ef URL \u3078\u8a98\u5c0e\u3059\u308b\uff08\u307e\u3060\u30b3\u30fc\u30c9\u3082\u30c8\u30fc\u30af\u30f3\u3082\u306a\u3044\uff09\u3002\n2. \u8a8d\u53ef\u30b5\u30fc\u30d0\u3067\u30ed\u30b0\u30a4\u30f3\u30fb\u540c\u610f\u3002\n3. **\u8a8d\u53ef\u30b3\u30fc\u30c9** \u304c\u4ed8\u3044\u305f\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u3067\u30d6\u30e9\u30a6\u30b6\u304c\u30a2\u30d7\u30ea\u306b\u623b\u308b\u3002\n4. \u30a2\u30d7\u30ea\uff08\u4e3b\u306b\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\uff09\u304c **\u8a8d\u53ef\u30b3\u30fc\u30c9\u3092\u30c8\u30fc\u30af\u30f3\u306b\u4ea4\u63db**\u3057\u3001**\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3** \u3092\u5f97\u308b\u3002\n5. **\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3** \u3092\u4ed8\u3051\u3066 API \u30b5\u30fc\u30d0\u3092\u547c\u3076\u3002\n\n## \u88dc\u8db3\uff08\u899a\u3048\u3066\u304a\u304f\u3068\u3088\u3044\u3053\u3068\uff09\n\n- **\u306a\u305c\u30b3\u30fc\u30c9\u3092\u631f\u3080\u306e\u304b**\uff1a\u30d6\u30e9\u30a6\u30b6\u306e\u5c65\u6b74\u3084 Referrer \u306b\u9577\u5bff\u547d\u30c8\u30fc\u30af\u30f3\u304c\u6b8b\u308a\u306b\u304f\u304f\u3001\u30c8\u30fc\u30af\u30f3\u53d6\u5f97\u3092\u30b5\u30fc\u30d0\u30fc\u5074\u306b\u5bc4\u305b\u3089\u308c\u308b\u305f\u3081\u3067\u3059\uff08\u5b9f\u88c5\u6b21\u7b2c\u3067\u306f\u30d5\u30ed\u30f3\u30c8\u306e\u307f\u306e\u69cb\u6210\u3082\u3042\u308a\u307e\u3059\u304c\u3001\u521d\u5fc3\u8005\u5411\u3051\u306e\u8aac\u660e\u3067\u306f\u300c\u30d0\u30c3\u30af\u30a8\u30f3\u30c9\u3067\u4ea4\u63db\u300d\u304c\u5206\u304b\u308a\u3084\u3059\u3044\u3067\u3059\uff09\u3002\n- **state \u30d1\u30e9\u30e1\u30fc\u30bf**\uff1aCSRF \u5bfe\u7b56\u3067\u3001\u30ea\u30c0\u30a4\u30ec\u30af\u30c8\u306e\u5f80\u5fa9\u3067\u540c\u3058\u5024\u304b\u691c\u8a3c\u3057\u307e\u3059\uff08\u56f3\u3067\u306f\u7701\u7565\u3057\u3066\u3044\u307e\u3059\u304c\u3001\u672c\u756a\u3067\u306f\u5fc5\u9808\u7d1a\u3067\u3059\uff09\u3002\n- **OpenID Connect**\uff1a\u300c\u30ed\u30b0\u30a4\u30f3\u300d\u3068\u300c\u30e6\u30fc\u30b6\u30fc\u60c5\u5831\uff08ID \u30c8\u30fc\u30af\u30f3\uff09\u300d\u3092\u6271\u3046\u62e1\u5f35\u3067\u3001\u8a8d\u53ef\u30b5\u30fc\u30d0\u306f\u591a\u304f\u306e\u5834\u5408 OIDC \u5bfe\u5fdc\u306e IdP \u3067\u3059\u3002\u30d5\u30ed\u30fc\u306e\u9aa8\u683c\u306f\u4e0a\u8a18\u3068\u540c\u3058\u3067\u3059\u3002\n\n\u3053\u306e README \u306f **\u8a8d\u53ef\u30b3\u30fc\u30c9\u30d5\u30ed\u30fc** \u306b\u7d5e\u3063\u305f\u81ea\u5df1\u5b8c\u7d50\u578b\u306e\u8aac\u660e\u3067\u3059\u3002\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u3084 SPA \u3060\u3051\u306e\u69cb\u6210\u3067\u306f\u3001PKCE \u306a\u3069\u8ffd\u52a0\u306e\u5b88\u308a\u65b9\u304c\u3042\u308a\u307e\u3059\u304c\u3001\u30d6\u30e9\u30a6\u30b6\u30fb\u8a8d\u53ef\u30b5\u30fc\u30d0\u30fbAPI \u306e\u5f79\u5272\u5206\u62c5\u306f\u540c\u3058\u8003\u3048\u65b9\u3067\u8aad\u307f\u66ff\u3048\u3089\u308c\u307e\u3059\u3002\n"}], "kubernetes-hierarchy-with_skill": [{"name": "answer.md", "type": "text", "content": "# Kubernetes: Deployment \u2192 ReplicaSet \u2192 Pod \u2192 Container\n\n\u4e0b\u56f3\u306f\u3001**\u30e6\u30fc\u30b6\u30fc\u304c\u4e3b\u306b\u89e6\u308b\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\uff08Deployment\uff09\u304b\u3089\u3001\u5b9f\u969b\u306b\u52d5\u304f\u30d7\u30ed\u30bb\u30b9\uff08Container\uff09\u307e\u3067**\u306e\u89aa\u5b50\u306e\u3064\u306a\u304c\u308a\u3068\u3001\u305d\u308c\u305e\u308c\u306e\u5f79\u5272\u306e\u9055\u3044\u3092\u793a\u3057\u307e\u3059\u3002\n\n```mermaid\n%%{init: {'flowchart': {'nodeSpacing': 32, 'rankSpacing': 48, 'padding': 16, 'subgraphTitleMargin': 8}}}%%\nflowchart TB\n  dep[\"Deployment<br/>\u671b\u3080\u72b6\u614b\u30fb\u66f4\u65b0\u6226\u7565\"]\n  rs[\"ReplicaSet<br/>Pod \u306e\u672c\u6570\u3092\u7dad\u6301\"]\n  pod[\"Pod<br/>\u5171\u6709\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30fb1 \u30b0\u30eb\u30fc\u30d7\"]\n  ctr[\"Container<br/>\u30a4\u30e1\u30fc\u30b8\u304b\u3089\u52d5\u304f\u30d7\u30ed\u30bb\u30b9\"]\n\n  dep --> rs\n  rs --> pod\n  pod --> ctr\n```\n\n## \u8aad\u307f\u65b9\u306e\u88dc\u8db3\n\n- **\u5171\u901a**: \u3044\u305a\u308c\u3082\u300c\u671b\u3080\u72b6\u614b\u3092\u5ba3\u8a00\u3057\u3001\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30d7\u30ec\u30fc\u30f3\u3068 kubelet \u304c\u73fe\u5b9f\u306b\u8fd1\u3065\u3051\u308b\u300d\u305f\u3081\u306e\u30aa\u30d6\u30b8\u30a7\u30af\u30c8\u306e\u968e\u5c64\u3067\u3059\u3002\n- **\u5dee\u304c\u51fa\u308b\u968e\u5c64**: \u4e0a\u307b\u3069\u300c\u30a2\u30d7\u30ea\u5168\u4f53\u306e\u904b\u7528\u300d\uff08\u66f4\u65b0\u30fb\u30ed\u30fc\u30eb\u30d0\u30c3\u30af\u30fb\u672c\u6570\u306e\u610f\u56f3\uff09\u3001\u4e0b\u307b\u3069\u300c\u5b9f\u884c\u306e\u5358\u4f4d\u300d\uff08\u30d7\u30ed\u30bb\u30b9\u30fb\u30ed\u30fc\u30ab\u30eb\u306a\u5171\u6709\uff09\u306b\u5bc4\u308a\u307e\u3059\u3002\n- **\u8aad\u307f\u65b9**: **\u4e0a\u304b\u3089\u4e0b**\u304c\u300c\u89aa\u304c\u5b50\u3092\u7ba1\u7406\u3059\u308b\u300d\u5411\u304d\u3067\u3059\u3002\u77e2\u5370\u306f\u6240\u6709\u30fb\u7ba1\u7406\u95a2\u4fc2\u306e\u6982\u7565\u3067\u3059\u3002\n\n1 \u3064\u306e Pod \u306b **\u8907\u6570\u306e Container** \u3092\u5165\u308c\u308b\u3053\u3068\u3082\u3042\u308a\u307e\u3059\uff08\u30b5\u30a4\u30c9\u30ab\u30fc\u306a\u3069\uff09\u3002\u305d\u306e\u5834\u5408\u3082\u300cPod \u304c\u307e\u3068\u3081\u3001Container \u304c\u4e2d\u3067\u52d5\u304f\u300d\u3068\u3044\u3046\u95a2\u4fc2\u306f\u540c\u3058\u3067\u3059\u3002\n\n## \u5f79\u5272\u306e\u3072\u3068\u3053\u3068\u6bd4\u8f03\n\n| \u30ea\u30bd\u30fc\u30b9 | \u76f4\u63a5\u306e\u5b50\uff08\u5178\u578b\uff09 | \u5f79\u5272\uff08\u521d\u5fc3\u8005\u5411\u3051\uff09 |\n| --- | --- | --- |\n| **Deployment** | ReplicaSet | \u30a2\u30d7\u30ea\u306e**\u7248\u3084\u66f4\u65b0**\uff08\u30ed\u30fc\u30ea\u30f3\u30b0\u66f4\u65b0\u30fb\u30ed\u30fc\u30eb\u30d0\u30c3\u30af\u306a\u3069\uff09\u3092\u6271\u3046\u3002ReplicaSet \u3092\u901a\u3058\u3066 Pod \u3092\u9593\u63a5\u7ba1\u7406\u3059\u308b\u3002 |\n| **ReplicaSet** | Pod | \u30e9\u30d9\u30eb\u304c\u5408\u3046 Pod \u304c**\u6307\u5b9a\u672c\u6570\u3042\u308b**\u3088\u3046\u306b\u4fdd\u3064\uff08\u8907\u88fd\u306e\u7dad\u6301\uff09\u3002 |\n| **Pod** | Container | **\u540c\u3058\u30ce\u30fc\u30c9\u4e0a**\u3067\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u7b49\u3092\u5171\u6709\u3059\u308b\u30b3\u30f3\u30c6\u30ca\u306e\u307e\u3068\u307e\u308a\u3002\u30b9\u30b1\u30fc\u30eb\u3084\u30c7\u30d7\u30ed\u30a4\u306e\u6700\u5c0f\u5358\u4f4d\u3068\u3057\u3066\u6271\u308f\u308c\u308b\u3053\u3068\u304c\u591a\u3044\u3002 |\n| **Container** | \uff08\u306a\u3057\uff09 | **\u5b9f\u969b\u306b\u52d5\u3044\u3066\u3044\u308b\u30d7\u30ed\u30bb\u30b9**\uff08\u30a4\u30e1\u30fc\u30b8\u304b\u3089\u8d77\u52d5\uff09\u3002 |\n\n**\u899a\u3048\u65b9**: \u65e5\u3005 `kubectl` \u3067\u89e6\u308b\u306e\u306f\u591a\u304f\u306e\u5834\u5408 **Deployment**\uff08\u307e\u305f\u306f\u76f4\u63a5 Pod\uff09\u3002**ReplicaSet** \u306f Deployment \u304c\u88cf\u3067\u4f5c\u308a\u3001\u901a\u5e38\u306f\u76f4\u63a5\u3044\u3058\u3089\u306a\u3044\u3053\u3068\u304c\u591a\u3044\u3067\u3059\u3002\n"}], "kubernetes-hierarchy-without_skill": [{"name": "answer.md", "type": "text", "content": "# Deployment / ReplicaSet / Pod / Container \u306e\u95a2\u4fc2\n\n## \u89aa\u5b50\u306e\u968e\u5c64\uff08\u3056\u3063\u304f\u308a\uff09\n\n```mermaid\nflowchart TB\n  subgraph desired[\"\u671b\u307e\u3057\u3044\u72b6\u614b\uff08\u5ba3\u8a00\uff09\"]\n    D[Deployment]\n  end\n  subgraph rs[\"\u30ec\u30d7\u30ea\u30ab\u7ba1\u7406\"]\n    R[ReplicaSet]\n  end\n  subgraph runtime[\"\u5b9f\u4f53\u304c\u52d5\u304f\u5358\u4f4d\"]\n    P1[Pod]\n    P2[Pod]\n    C1[Container]\n    C2[Container]\n  end\n  D -->|\"\u4f5c\u6210\u30fb\u66f4\u65b0\"| R\n  R -->|\"\u5fc5\u8981\u6570\u3060\u3051\u7dad\u6301\"| P1\n  R --> P2\n  P1 --> C1\n  P2 --> C2\n```\n\n- **Deployment** \u304c **ReplicaSet** \u3092\u675f\u306d\u3001\u30ed\u30fc\u30eb\u30a2\u30a6\u30c8\u3084\u30ed\u30fc\u30eb\u30d0\u30c3\u30af\u306e\u5358\u4f4d\u306b\u306a\u308b\u3002\n- **ReplicaSet** \u304c **Pod** \u306e\u500b\u6570\u3068\u30e9\u30d9\u30eb\u4e00\u81f4\u3092\u7dad\u6301\u3059\u308b\u3002\n- **Pod** \u304c **Container** \u3092\u307e\u3068\u3081\u3001\u540c\u3058\u30ce\u30fc\u30c9\u4e0a\u3067\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30fb\u30b9\u30c8\u30ec\u30fc\u30b8\u3092\u5171\u6709\u3059\u308b\u3002\n\n## \u5f79\u5272\u306e\u9055\u3044\uff08\u77ed\u3044\u8868\uff09\n\n| \u30ea\u30bd\u30fc\u30b9 | \u4e3b\u306a\u5f79\u5272 | \u89aa | \u5b50\uff08\u5178\u578b\uff09 |\n|----------|----------|-----|------------|\n| **Deployment** | \u671b\u307e\u3057\u3044\u30a2\u30d7\u30ea\u72b6\u614b\u306e\u5ba3\u8a00\u3001\u66f4\u65b0\u6226\u7565\u3001\u5c65\u6b74 | \uff08\u306a\u3057\uff0f\u30af\u30e9\u30b9\u30bf\u4e0a\u306e\u30c8\u30c3\u30d7\u30ec\u30d9\u30eb\u5ba3\u8a00\uff09 | ReplicaSet |\n| **ReplicaSet** | \u6307\u5b9a\u30e9\u30d9\u30eb\u306e Pod \u3092 **\u4e00\u5b9a\u6570** \u306b\u4fdd\u3064 | Deployment\uff08\u901a\u5e38\u306f\u9593\u63a5\u7ba1\u7406\uff09 | Pod |\n| **Pod** | \u30b3\u30f3\u30c6\u30ca\u3092 **1 \u30ce\u30fc\u30c9** \u306b\u307e\u3068\u3081\u308b\u6700\u5c0f\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb\u5358\u4f4d | ReplicaSet \u306a\u3069 | Container |\n| **Container** | \u5b9f\u969b\u306b\u52d5\u304f\u30d7\u30ed\u30bb\u30b9\uff08\u30a4\u30e1\u30fc\u30b8\uff0b\u8a2d\u5b9a\uff09 | Pod | \uff08\u306a\u3057\uff09 |\n\n## \u3088\u304f\u3042\u308b\u8aad\u307f\u65b9\n\n1. **\u30e6\u30fc\u30b6\u30fc\u304c\u89e6\u308b\u306e\u306f\u307b\u307c Deployment**\uff08`kubectl apply` \u306e\u5bfe\u8c61\u306b\u306a\u308a\u3084\u3059\u3044\uff09\u3002\n2. **ReplicaSet \u306f Deployment \u304c\u81ea\u52d5\u3067\u4f5c\u308b**\u3053\u3068\u304c\u591a\u304f\u3001\u76f4\u63a5\u7de8\u96c6\u3059\u308b\u5fc5\u8981\u306f\u5c11\u306a\u3044\u3002\n3. **Pod \u306f\u6368\u3066\u3066\u3088\u3044\u5358\u4f4d**\uff08\u30b9\u30b1\u30fc\u30eb\u3084\u518d\u914d\u7f6e\u3067\u4f5c\u308a\u76f4\u3055\u308c\u308b\uff09\u3002**Container \u306f Pod \u306e\u4e2d\u3067\u52d5\u304f\u5b9f\u4f53**\u3002\n\n---\n\n*\u3053\u306e\u30e1\u30e2\u306f\u968e\u5c64\u3068\u8cac\u52d9\u306e\u5bfe\u6bd4\u7528\u3002\u672c\u756a\u904b\u7528\u3067\u306f Service\u30fbVolume\u30fbProbe \u306a\u3069\u5225\u30ea\u30bd\u30fc\u30b9\u3082\u30bb\u30c3\u30c8\u3067\u8aad\u3080\u3002*\n"}]}, "benchmark": {"metadata": {"skill_name": "visual-explanations", "skill_path": "/Users/yoda/forProgramming/DK/skills/visual-explanations", "executor_model": "fast-subagent", "analyzer_model": "inline", "timestamp": "2026-04-07T21:37:07.052487+00:00", "evals_run": [1, 2, 3], "runs_per_configuration": 1}, "runs": [{"eval_id": 1, "eval_name": "vm-container-comparison", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0.0, "tokens": 1591, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u672c\u6587\u306b\u5171\u901a\u70b9\u3068\u5dee\u5206\u306e\u4e21\u65b9\u3078\u306e\u8a00\u53ca\u304c\u3042\u308b", "passed": true, "evidence": "common=True, difference=True"}, {"text": "\u56f3\u307e\u305f\u306f\u88dc\u8db3\u3067\u8aad\u307f\u9806\uff08\u4e0a\u304b\u3089\u4e0b / \u5de6\u304b\u3089\u53f3\u306a\u3069\uff09\u304c\u793a\u3055\u308c\u3066\u3044\u308b", "passed": true, "evidence": "Found reading-order guidance."}], "notes": []}, {"eval_id": 1, "eval_name": "vm-container-comparison", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0.0, "tokens": 1827, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u672c\u6587\u306b\u5171\u901a\u70b9\u3068\u5dee\u5206\u306e\u4e21\u65b9\u3078\u306e\u8a00\u53ca\u304c\u3042\u308b", "passed": true, "evidence": "common=True, difference=True"}, {"text": "\u56f3\u307e\u305f\u306f\u88dc\u8db3\u3067\u8aad\u307f\u9806\uff08\u4e0a\u304b\u3089\u4e0b / \u5de6\u304b\u3089\u53f3\u306a\u3069\uff09\u304c\u793a\u3055\u308c\u3066\u3044\u308b", "passed": true, "evidence": "Found reading-order guidance."}], "notes": []}, {"eval_id": 2, "eval_name": "oauth-login-flow", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0.0, "tokens": 3299, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u306e\u4e21\u65b9\u304c\u672c\u6587\u307e\u305f\u306f\u56f3\u306b\u73fe\u308c\u308b", "passed": true, "evidence": "auth_code=True, access_token=True"}, {"text": "\u30d6\u30e9\u30a6\u30b6\u30fb\u30a2\u30d7\u30ea\u30fb\u8a8d\u53ef\u30b5\u30fc\u30d0\u30fbAPI \u30b5\u30fc\u30d0\u306e4\u8005\u304c\u8aac\u660e\u306b\u542b\u307e\u308c\u308b", "passed": true, "evidence": "\u30d6\u30e9\u30a6\u30b6=True, \u30a2\u30d7\u30ea=True, \u8a8d\u53ef\u30b5\u30fc\u30d0=True, API \u30b5\u30fc\u30d0=True"}], "notes": []}, {"eval_id": 2, "eval_name": "oauth-login-flow", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0.0, "tokens": 2156, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "\u8a8d\u53ef\u30b3\u30fc\u30c9\u3068\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u306e\u4e21\u65b9\u304c\u672c\u6587\u307e\u305f\u306f\u56f3\u306b\u73fe\u308c\u308b", "passed": true, "evidence": "auth_code=True, access_token=True"}, {"text": "\u30d6\u30e9\u30a6\u30b6\u30fb\u30a2\u30d7\u30ea\u30fb\u8a8d\u53ef\u30b5\u30fc\u30d0\u30fbAPI \u30b5\u30fc\u30d0\u306e4\u8005\u304c\u8aac\u660e\u306b\u542b\u307e\u308c\u308b", "passed": true, "evidence": "\u30d6\u30e9\u30a6\u30b6=True, \u30a2\u30d7\u30ea=True, \u8a8d\u53ef\u30b5\u30fc\u30d0=True, API \u30b5\u30fc\u30d0=True"}], "notes": []}, {"eval_id": 3, "eval_name": "kubernetes-hierarchy", "configuration": "with_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0.0, "tokens": 1083, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "Markdown \u306e\u8868\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found markdown table syntax."}, {"text": "Deployment\u30fbReplicaSet\u30fbPod\u30fbContainer \u306e4\u8a9e\u304c\u3059\u3079\u3066\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Deployment=True, ReplicaSet=True, Pod=True, Container=True"}], "notes": []}, {"eval_id": 3, "eval_name": "kubernetes-hierarchy", "configuration": "without_skill", "run_number": 1, "result": {"pass_rate": 1.0, "passed": 3, "failed": 0, "total": 3, "time_seconds": 0.0, "tokens": 1198, "tool_calls": 0, "errors": 0}, "expectations": [{"text": "Markdown \u306b Mermaid \u30b3\u30fc\u30c9\u30d6\u30ed\u30c3\u30af\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found ```mermaid block."}, {"text": "Markdown \u306e\u8868\u304c\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Found markdown table syntax."}, {"text": "Deployment\u30fbReplicaSet\u30fbPod\u30fbContainer \u306e4\u8a9e\u304c\u3059\u3079\u3066\u542b\u307e\u308c\u308b", "passed": true, "evidence": "Deployment=True, ReplicaSet=True, Pod=True, Container=True"}], "notes": []}], "run_summary": {"with_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0}, "tokens": {"mean": 1991, "stddev": 1160.8893, "min": 1083, "max": 3299}}, "without_skill": {"pass_rate": {"mean": 1.0, "stddev": 0.0, "min": 1.0, "max": 1.0}, "time_seconds": {"mean": 0.0, "stddev": 0.0, "min": 0.0, "max": 0.0}, "tokens": {"mean": 1727, "stddev": 486.7659, "min": 1198, "max": 2156}}, "delta": {"pass_rate": "+0.00", "time_seconds": "+0.0", "tokens": "+264"}}, "notes": ["Iteration 2 incorporates user feedback: same-layer comparison should remain visible instead of being split away.", "Assertions are intentionally lightweight and mainly ensure structural completeness; human review is the main signal for eval 1.", "Timing and token counts from subagent notifications were not recoverable; token column uses output character count as a placeholder."]}};
+
+    // ---- State ----
+    let feedbackMap = {};  // run_id -> feedback text
+    let currentIndex = 0;
+    let visitedRuns = new Set();
+
+    // ---- Init ----
+    async function init() {
+      // Load saved feedback from server — but only if this isn't a fresh
+      // iteration (indicated by previous_feedback being present). When
+      // previous feedback exists, the feedback.json on disk is stale from
+      // the prior iteration and should not pre-fill the textareas.
+      const hasPrevious = Object.keys(EMBEDDED_DATA.previous_feedback || {}).length > 0
+        || Object.keys(EMBEDDED_DATA.previous_outputs || {}).length > 0;
+      if (!hasPrevious) {
+        try {
+          const resp = await fetch("/api/feedback");
+          const data = await resp.json();
+          if (data.reviews) {
+            for (const r of data.reviews) feedbackMap[r.run_id] = r.feedback;
+          }
+        } catch { /* first run, no feedback yet */ }
+      }
+
+      document.getElementById("skill-name").textContent = EMBEDDED_DATA.skill_name;
+      showRun(0);
+
+      // Wire up feedback auto-save
+      const textarea = document.getElementById("feedback");
+      let saveTimeout = null;
+      textarea.addEventListener("input", () => {
+        clearTimeout(saveTimeout);
+        document.getElementById("feedback-status").textContent = "";
+        saveTimeout = setTimeout(() => saveCurrentFeedback(), 800);
+      });
+    }
+
+    // ---- Navigation ----
+    function navigate(delta) {
+      const newIndex = currentIndex + delta;
+      if (newIndex >= 0 && newIndex < EMBEDDED_DATA.runs.length) {
+        saveCurrentFeedback();
+        showRun(newIndex);
+      }
+    }
+
+    function updateNavButtons() {
+      document.getElementById("prev-btn").disabled = currentIndex === 0;
+      document.getElementById("next-btn").disabled =
+        currentIndex === EMBEDDED_DATA.runs.length - 1;
+    }
+
+    // ---- Show a run ----
+    function showRun(index) {
+      currentIndex = index;
+      const run = EMBEDDED_DATA.runs[index];
+
+      // Progress
+      document.getElementById("progress").textContent =
+        `${index + 1} of ${EMBEDDED_DATA.runs.length}`;
+
+      // Prompt
+      document.getElementById("prompt-text").textContent = run.prompt;
+
+      // Config badge
+      const badge = document.getElementById("config-badge");
+      const configMatch = run.id.match(/(with_skill|without_skill|new_skill|old_skill)/);
+      if (configMatch) {
+        const config = configMatch[1];
+        const isBaseline = config === "without_skill" || config === "old_skill";
+        badge.textContent = config.replace(/_/g, " ");
+        badge.className = "config-badge " + (isBaseline ? "config-baseline" : "config-primary");
+        badge.style.display = "inline-block";
+      } else {
+        badge.style.display = "none";
+      }
+
+      // Outputs
+      renderOutputs(run);
+
+      // Previous outputs
+      renderPrevOutputs(run);
+
+      // Grades
+      renderGrades(run);
+
+      // Previous feedback
+      const prevFb = (EMBEDDED_DATA.previous_feedback || {})[run.id];
+      const prevEl = document.getElementById("prev-feedback");
+      if (prevFb) {
+        document.getElementById("prev-feedback-text").textContent = prevFb;
+        prevEl.style.display = "block";
+      } else {
+        prevEl.style.display = "none";
+      }
+
+      // Feedback
+      document.getElementById("feedback").value = feedbackMap[run.id] || "";
+      document.getElementById("feedback-status").textContent = "";
+
+      updateNavButtons();
+
+      // Track visited runs and promote done button when all visited
+      visitedRuns.add(index);
+      const doneBtn = document.getElementById("done-btn");
+      if (visitedRuns.size >= EMBEDDED_DATA.runs.length) {
+        doneBtn.classList.add("ready");
+      }
+
+      // Scroll main content to top
+      document.querySelector(".main").scrollTop = 0;
+    }
+
+    // ---- Render outputs ----
+    function renderOutputs(run) {
+      const container = document.getElementById("outputs-body");
+      container.innerHTML = "";
+
+      const outputs = run.outputs || [];
+      if (outputs.length === 0) {
+        container.innerHTML = '<div class="empty-state">No output files</div>';
+        return;
+      }
+
+      for (const file of outputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        // Always show file header with download link
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const content = document.createElement("div");
+        content.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          content.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          content.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          content.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(content, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          content.appendChild(a);
+        } else if (file.type === "error") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          pre.style.color = "var(--red)";
+          content.appendChild(pre);
+        }
+
+        fileDiv.appendChild(content);
+        container.appendChild(fileDiv);
+      }
+    }
+
+    // ---- XLSX rendering via SheetJS ----
+    function renderXlsx(container, b64Data) {
+      try {
+        const raw = Uint8Array.from(atob(b64Data), c => c.charCodeAt(0));
+        const wb = XLSX.read(raw, { type: "array" });
+
+        for (let i = 0; i < wb.SheetNames.length; i++) {
+          const sheetName = wb.SheetNames[i];
+          const ws = wb.Sheets[sheetName];
+
+          if (wb.SheetNames.length > 1) {
+            const sheetLabel = document.createElement("div");
+            sheetLabel.style.cssText =
+              "font-weight:600; font-size:0.8rem; color:#b0aea5; margin-top:0.5rem; margin-bottom:0.25rem;";
+            sheetLabel.textContent = "Sheet: " + sheetName;
+            container.appendChild(sheetLabel);
+          }
+
+          const htmlStr = XLSX.utils.sheet_to_html(ws, { editable: false });
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = htmlStr;
+          container.appendChild(wrapper);
+        }
+      } catch (err) {
+        container.textContent = "Error rendering spreadsheet: " + err.message;
+      }
+    }
+
+    // ---- Grades ----
+    function renderGrades(run) {
+      const section = document.getElementById("grades-section");
+      const content = document.getElementById("grades-content");
+
+      if (!run.grading) {
+        section.style.display = "none";
+        return;
+      }
+
+      const grading = run.grading;
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("grades-arrow").classList.remove("open");
+
+      const summary = grading.summary || {};
+      const expectations = grading.expectations || [];
+
+      let html = '<div style="padding: 1rem;">';
+
+      // Summary line
+      const passRate = summary.pass_rate != null
+        ? Math.round(summary.pass_rate * 100) + "%"
+        : "?";
+      const badgeClass = summary.pass_rate >= 0.8 ? "grade-pass" : summary.pass_rate >= 0.5 ? "" : "grade-fail";
+      html += '<div class="grades-summary">';
+      html += '<span class="grade-badge ' + badgeClass + '">' + passRate + '</span>';
+      html += '<span>' + (summary.passed || 0) + ' passed, ' + (summary.failed || 0) + ' failed of ' + (summary.total || 0) + '</span>';
+      html += '</div>';
+
+      // Assertions list
+      html += '<ul class="assertion-list">';
+      for (const exp of expectations) {
+        const statusClass = exp.passed ? "pass" : "fail";
+        const statusIcon = exp.passed ? "\u2713" : "\u2717";
+        html += '<li class="assertion-item">';
+        html += '<span class="assertion-status ' + statusClass + '">' + statusIcon + '</span>';
+        html += '<span>' + escapeHtml(exp.text) + '</span>';
+        if (exp.evidence) {
+          html += '<div class="assertion-evidence">' + escapeHtml(exp.evidence) + '</div>';
+        }
+        html += '</li>';
+      }
+      html += '</ul>';
+
+      html += '</div>';
+      content.innerHTML = html;
+    }
+
+    function toggleGrades() {
+      const content = document.getElementById("grades-content");
+      const arrow = document.getElementById("grades-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Previous outputs (collapsible) ----
+    function renderPrevOutputs(run) {
+      const section = document.getElementById("prev-outputs-section");
+      const content = document.getElementById("prev-outputs-content");
+      const prevOutputs = (EMBEDDED_DATA.previous_outputs || {})[run.id];
+
+      if (!prevOutputs || prevOutputs.length === 0) {
+        section.style.display = "none";
+        return;
+      }
+
+      section.style.display = "block";
+      // Reset to collapsed
+      content.classList.remove("open");
+      document.getElementById("prev-outputs-arrow").classList.remove("open");
+
+      // Render the files into the content area
+      content.innerHTML = "";
+      const wrapper = document.createElement("div");
+      wrapper.style.padding = "1rem";
+
+      for (const file of prevOutputs) {
+        const fileDiv = document.createElement("div");
+        fileDiv.className = "output-file";
+
+        const header = document.createElement("div");
+        header.className = "output-file-header";
+        const nameSpan = document.createElement("span");
+        nameSpan.textContent = file.name;
+        header.appendChild(nameSpan);
+        const dlBtn = document.createElement("a");
+        dlBtn.className = "dl-btn";
+        dlBtn.textContent = "Download";
+        dlBtn.download = file.name;
+        dlBtn.href = getDownloadUri(file);
+        header.appendChild(dlBtn);
+        fileDiv.appendChild(header);
+
+        const fc = document.createElement("div");
+        fc.className = "output-file-content";
+
+        if (file.type === "text") {
+          const pre = document.createElement("pre");
+          pre.textContent = file.content;
+          fc.appendChild(pre);
+        } else if (file.type === "image") {
+          const img = document.createElement("img");
+          img.src = file.data_uri;
+          img.alt = file.name;
+          fc.appendChild(img);
+        } else if (file.type === "pdf") {
+          const iframe = document.createElement("iframe");
+          iframe.src = file.data_uri;
+          fc.appendChild(iframe);
+        } else if (file.type === "xlsx") {
+          renderXlsx(fc, file.data_b64);
+        } else if (file.type === "binary") {
+          const a = document.createElement("a");
+          a.className = "download-link";
+          a.href = file.data_uri;
+          a.download = file.name;
+          a.textContent = "Download " + file.name;
+          fc.appendChild(a);
+        }
+
+        fileDiv.appendChild(fc);
+        wrapper.appendChild(fileDiv);
+      }
+
+      content.appendChild(wrapper);
+    }
+
+    function togglePrevOutputs() {
+      const content = document.getElementById("prev-outputs-content");
+      const arrow = document.getElementById("prev-outputs-arrow");
+      content.classList.toggle("open");
+      arrow.classList.toggle("open");
+    }
+
+    // ---- Feedback (saved to server -> feedback.json) ----
+    function saveCurrentFeedback() {
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // Build reviews array from map
+      const reviews = [];
+      for (const [run_id, feedback] of Object.entries(feedbackMap)) {
+        if (feedback.trim()) {
+          reviews.push({ run_id, feedback, timestamp: new Date().toISOString() });
+        }
+      }
+
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reviews, status: "in_progress" }),
+      }).then(() => {
+        document.getElementById("feedback-status").textContent = "Saved";
+      }).catch(() => {
+        // Static mode or server unavailable — no-op on auto-save,
+        // feedback will be downloaded on final submit
+        document.getElementById("feedback-status").textContent = "Will download on submit";
+      });
+    }
+
+    // ---- Done ----
+    function showDoneDialog() {
+      // Save current textarea to feedbackMap (but don't POST yet)
+      const run = EMBEDDED_DATA.runs[currentIndex];
+      const text = document.getElementById("feedback").value;
+      if (text.trim() === "") {
+        delete feedbackMap[run.id];
+      } else {
+        feedbackMap[run.id] = text;
+      }
+
+      // POST once with status: complete — include ALL runs so the model
+      // can distinguish "no feedback" (looks good) from "not reviewed"
+      const reviews = [];
+      const ts = new Date().toISOString();
+      for (const r of EMBEDDED_DATA.runs) {
+        reviews.push({ run_id: r.id, feedback: feedbackMap[r.id] || "", timestamp: ts });
+      }
+      const payload = JSON.stringify({ reviews, status: "complete" }, null, 2);
+      fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: payload,
+      }).then(() => {
+        document.getElementById("done-overlay").classList.add("visible");
+      }).catch(() => {
+        // Server not available (static mode) — download as file
+        const blob = new Blob([payload], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "feedback.json";
+        a.click();
+        URL.revokeObjectURL(url);
+        document.getElementById("done-overlay").classList.add("visible");
+      });
+    }
+
+    function closeDoneDialog() {
+      // Reset status back to in_progress
+      saveCurrentFeedback();
+      document.getElementById("done-overlay").classList.remove("visible");
+    }
+
+    // ---- Toast ----
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("visible");
+      setTimeout(() => toast.classList.remove("visible"), 2000);
+    }
+
+    // ---- Keyboard nav ----
+    document.addEventListener("keydown", (e) => {
+      // Don't capture when typing in textarea
+      if (e.target.tagName === "TEXTAREA") return;
+
+      if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        navigate(-1);
+      } else if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        navigate(1);
+      }
+    });
+
+    // ---- Util ----
+    function getDownloadUri(file) {
+      if (file.data_uri) return file.data_uri;
+      if (file.data_b64) return "data:application/octet-stream;base64," + file.data_b64;
+      if (file.type === "text") return "data:text/plain;charset=utf-8," + encodeURIComponent(file.content);
+      return "#";
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement("div");
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    // ---- View switching ----
+    function switchView(view) {
+      document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".view-panel").forEach(p => p.classList.remove("active"));
+      document.querySelector(`[onclick="switchView('${view}')"]`).classList.add("active");
+      document.getElementById("panel-" + view).classList.add("active");
+    }
+
+    // ---- Benchmark rendering ----
+    function renderBenchmark() {
+      const data = EMBEDDED_DATA.benchmark;
+      if (!data) return;
+
+      // Show the tabs
+      document.getElementById("view-tabs").style.display = "flex";
+
+      const container = document.getElementById("benchmark-content");
+      const summary = data.run_summary || {};
+      const metadata = data.metadata || {};
+      const notes = data.notes || [];
+
+      let html = "";
+
+      // Header
+      html += "<h2 style='font-family: Poppins, sans-serif; margin-bottom: 0.5rem;'>Benchmark Results</h2>";
+      html += "<p style='color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1.25rem;'>";
+      if (metadata.skill_name) html += "<strong>" + escapeHtml(metadata.skill_name) + "</strong> &mdash; ";
+      if (metadata.timestamp) html += metadata.timestamp + " &mdash; ";
+      if (metadata.evals_run) html += "Evals: " + metadata.evals_run.join(", ") + " &mdash; ";
+      html += (metadata.runs_per_configuration || "?") + " runs per configuration";
+      html += "</p>";
+
+      // Summary table
+      html += '<table class="benchmark-table">';
+
+      function fmtStat(stat, pct) {
+        if (!stat) return "—";
+        const suffix = pct ? "%" : "";
+        const m = pct ? (stat.mean * 100).toFixed(0) : stat.mean.toFixed(1);
+        const s = pct ? (stat.stddev * 100).toFixed(0) : stat.stddev.toFixed(1);
+        return m + suffix + " ± " + s + suffix;
+      }
+
+      function deltaClass(val) {
+        if (!val) return "";
+        const n = parseFloat(val);
+        if (n > 0) return "benchmark-delta-positive";
+        if (n < 0) return "benchmark-delta-negative";
+        return "";
+      }
+
+      // Discover config names dynamically (everything except "delta")
+      const configs = Object.keys(summary).filter(k => k !== "delta");
+      const configA = configs[0] || "config_a";
+      const configB = configs[1] || "config_b";
+      const labelA = configA.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const labelB = configB.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+      const a = summary[configA] || {};
+      const b = summary[configB] || {};
+      const delta = summary.delta || {};
+
+      html += "<thead><tr><th>Metric</th><th>" + escapeHtml(labelA) + "</th><th>" + escapeHtml(labelB) + "</th><th>Delta</th></tr></thead>";
+      html += "<tbody>";
+
+      html += "<tr><td><strong>Pass Rate</strong></td>";
+      html += "<td>" + fmtStat(a.pass_rate, true) + "</td>";
+      html += "<td>" + fmtStat(b.pass_rate, true) + "</td>";
+      html += '<td class="' + deltaClass(delta.pass_rate) + '">' + (delta.pass_rate || "—") + "</td></tr>";
+
+      // Time (only show row if data exists)
+      if (a.time_seconds || b.time_seconds) {
+        html += "<tr><td><strong>Time (s)</strong></td>";
+        html += "<td>" + fmtStat(a.time_seconds, false) + "</td>";
+        html += "<td>" + fmtStat(b.time_seconds, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.time_seconds) + '">' + (delta.time_seconds ? delta.time_seconds + "s" : "—") + "</td></tr>";
+      }
+
+      // Tokens (only show row if data exists)
+      if (a.tokens || b.tokens) {
+        html += "<tr><td><strong>Tokens</strong></td>";
+        html += "<td>" + fmtStat(a.tokens, false) + "</td>";
+        html += "<td>" + fmtStat(b.tokens, false) + "</td>";
+        html += '<td class="' + deltaClass(delta.tokens) + '">' + (delta.tokens || "—") + "</td></tr>";
+      }
+
+      html += "</tbody></table>";
+
+      // Per-eval breakdown (if runs data available)
+      const runs = data.runs || [];
+      if (runs.length > 0) {
+        const evalIds = [...new Set(runs.map(r => r.eval_id))].sort((a, b) => a - b);
+
+        html += "<h3 style='font-family: Poppins, sans-serif; margin-bottom: 0.75rem;'>Per-Eval Breakdown</h3>";
+
+        const hasTime = runs.some(r => r.result && r.result.time_seconds != null);
+        const hasErrors = runs.some(r => r.result && r.result.errors > 0);
+
+        for (const evalId of evalIds) {
+          const evalRuns = runs.filter(r => r.eval_id === evalId);
+          const evalName = evalRuns[0] && evalRuns[0].eval_name ? evalRuns[0].eval_name : "Eval " + evalId;
+
+          html += "<h4 style='font-family: Poppins, sans-serif; margin: 1rem 0 0.5rem; color: var(--text);'>" + escapeHtml(evalName) + "</h4>";
+          html += '<table class="benchmark-table">';
+          html += "<thead><tr><th>Config</th><th>Run</th><th>Pass Rate</th>";
+          if (hasTime) html += "<th>Time (s)</th>";
+          if (hasErrors) html += "<th>Crashes During Execution</th>";
+          html += "</tr></thead>";
+          html += "<tbody>";
+
+          // Group by config and render with average rows
+          const configGroups = [...new Set(evalRuns.map(r => r.configuration))];
+          for (let ci = 0; ci < configGroups.length; ci++) {
+            const config = configGroups[ci];
+            const configRuns = evalRuns.filter(r => r.configuration === config);
+            if (configRuns.length === 0) continue;
+
+            const rowClass = ci === 0 ? "benchmark-row-with" : "benchmark-row-without";
+            const configLabel = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+
+            for (const run of configRuns) {
+              const r = run.result || {};
+              const prClass = r.pass_rate >= 0.8 ? "benchmark-delta-positive" : r.pass_rate < 0.5 ? "benchmark-delta-negative" : "";
+              html += '<tr class="' + rowClass + '">';
+              html += "<td>" + configLabel + "</td>";
+              html += "<td>" + run.run_number + "</td>";
+              html += '<td class="' + prClass + '">' + ((r.pass_rate || 0) * 100).toFixed(0) + "% (" + (r.passed || 0) + "/" + (r.total || 0) + ")</td>";
+              if (hasTime) html += "<td>" + (r.time_seconds != null ? r.time_seconds.toFixed(1) : "—") + "</td>";
+              if (hasErrors) html += "<td>" + (r.errors || 0) + "</td>";
+              html += "</tr>";
+            }
+
+            // Average row
+            const rates = configRuns.map(r => (r.result || {}).pass_rate || 0);
+            const avgRate = rates.reduce((a, b) => a + b, 0) / rates.length;
+            const avgPrClass = avgRate >= 0.8 ? "benchmark-delta-positive" : avgRate < 0.5 ? "benchmark-delta-negative" : "";
+            html += '<tr class="benchmark-row-avg ' + rowClass + '">';
+            html += "<td>" + configLabel + "</td>";
+            html += "<td>Avg</td>";
+            html += '<td class="' + avgPrClass + '">' + (avgRate * 100).toFixed(0) + "%</td>";
+            if (hasTime) {
+              const times = configRuns.map(r => (r.result || {}).time_seconds).filter(t => t != null);
+              html += "<td>" + (times.length ? (times.reduce((a, b) => a + b, 0) / times.length).toFixed(1) : "—") + "</td>";
+            }
+            if (hasErrors) html += "<td></td>";
+            html += "</tr>";
+          }
+          html += "</tbody></table>";
+
+          // Per-assertion detail for this eval
+          const runsWithExpectations = {};
+          for (const config of configGroups) {
+            runsWithExpectations[config] = evalRuns.filter(r => r.configuration === config && r.expectations && r.expectations.length > 0);
+          }
+          const hasAnyExpectations = Object.values(runsWithExpectations).some(runs => runs.length > 0);
+          if (hasAnyExpectations) {
+            // Collect all unique assertion texts across all configs
+            const allAssertions = [];
+            const seen = new Set();
+            for (const config of configGroups) {
+              for (const run of runsWithExpectations[config]) {
+                for (const exp of (run.expectations || [])) {
+                  if (!seen.has(exp.text)) {
+                    seen.add(exp.text);
+                    allAssertions.push(exp.text);
+                  }
+                }
+              }
+            }
+
+            html += '<table class="benchmark-table" style="margin-top: 0.5rem;">';
+            html += "<thead><tr><th>Assertion</th>";
+            for (const config of configGroups) {
+              const label = config.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+              html += "<th>" + escapeHtml(label) + "</th>";
+            }
+            html += "</tr></thead><tbody>";
+
+            for (const assertionText of allAssertions) {
+              html += "<tr><td>" + escapeHtml(assertionText) + "</td>";
+
+              for (const config of configGroups) {
+                html += "<td>";
+                for (const run of runsWithExpectations[config]) {
+                  const exp = (run.expectations || []).find(e => e.text === assertionText);
+                  if (exp) {
+                    const cls = exp.passed ? "benchmark-delta-positive" : "benchmark-delta-negative";
+                    const icon = exp.passed ? "\u2713" : "\u2717";
+                    html += '<span class="' + cls + '" title="Run ' + run.run_number + ': ' + escapeHtml(exp.evidence || "") + '">' + icon + "</span> ";
+                  } else {
+                    html += "— ";
+                  }
+                }
+                html += "</td>";
+              }
+              html += "</tr>";
+            }
+            html += "</tbody></table>";
+          }
+        }
+      }
+
+      // Notes
+      if (notes.length > 0) {
+        html += '<div class="benchmark-notes">';
+        html += "<h3>Analysis Notes</h3>";
+        html += "<ul>";
+        for (const note of notes) {
+          html += "<li>" + escapeHtml(note) + "</li>";
+        }
+        html += "</ul></div>";
+      }
+
+      container.innerHTML = html;
+    }
+
+    // ---- Start ----
+    init();
+    renderBenchmark();
+  </script>
+</body>
+</html>
