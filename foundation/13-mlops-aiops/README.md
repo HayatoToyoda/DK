@@ -1,4 +1,11 @@
-# MLOps / AIOps — AI 時代のインフラ運用
+# 13. MLOps / AIOps — AI 時代のインフラ運用
+
+> ⏱ 所要時間目安: 2〜3 時間（読み物 + 概念演習）
+>
+> **本章の構成**: 幅広いトピックを扱います。すべてを一度に覚える必要はありません。
+> - **Track A**: MLOps の基本概念（データサイエンスに関心がある人向け）
+> - **Track B**: システム設計・DR・カオスエンジニアリング（インフラに集中したい人向け）
+> - 両方を学ぶのが理想ですが、興味のある Track から始めてください。
 
 ## この章で学ぶこと
 
@@ -79,32 +86,32 @@ flowchart LR
 ### MLOps ツール
 
 ```mermaid
-flowchart TB
-    subgraph Experiment["実験管理"]
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 30, 'subgraphTitleMargin': 8}}}%%
+flowchart LR
+    subgraph Exp["実験"]
         MLflow["MLflow"]
-        W_B["Weights &<br/>Biases"]
+        W_B["W&B"]
     end
 
-    subgraph Pipeline["パイプライン"]
-        Kubeflow["Kubeflow<br/>Pipelines"]
-        Airflow["Apache<br/>Airflow"]
+    subgraph Pipe["パイプライン"]
+        Kubeflow["Kubeflow"]
+        Airflow["Airflow"]
     end
 
-    subgraph Serving["モデルサービング"]
+    subgraph Serve["サービング"]
         KServe["KServe"]
-        Seldon["Seldon Core"]
-        TFServing["TF Serving"]
+        Seldon["Seldon"]
     end
 
-    subgraph DataVer["データバージョン管理"]
+    subgraph Data["データ管理"]
         DVC["DVC"]
         LakeFS["LakeFS"]
     end
 
-    style Experiment fill:#e8f5e9
-    style Pipeline fill:#e3f2fd
-    style Serving fill:#fff3e0
-    style DataVer fill:#fce4ec
+    style Exp fill:#e8f5e9
+    style Pipe fill:#e3f2fd
+    style Serve fill:#fff3e0
+    style Data fill:#fce4ec
 ```
 
 | カテゴリ | ツール | 概要 |
@@ -221,15 +228,15 @@ flowchart TB
     IDP --> Obs["可観測性<br/>スタック"]
     IDP --> Sec["セキュリティ<br/>ポリシー"]
 
-    subgraph Tools["IDP ツール"]
-        Backstage["Backstage<br/>（Spotify OSS）"]
-        Crossplane["Crossplane<br/>（K8s ネイティブ IaC）"]
-        Kratix["Kratix<br/>（プラットフォーム API）"]
-    end
+    IDP --> Backstage["Backstage<br/>（Spotify OSS）"]
+    IDP --> Crossplane["Crossplane<br/>（K8s ネイティブ IaC）"]
+    IDP --> Kratix["Kratix<br/>（プラットフォーム API）"]
 
     style Dev fill:#2196F3,color:#fff
     style IDP fill:#FF9800,color:#fff
-    style Tools fill:#e8f5e9
+    style Backstage fill:#e8f5e9
+    style Crossplane fill:#e8f5e9
+    style Kratix fill:#e8f5e9
 ```
 
 ### Platform Engineering の目的
@@ -332,45 +339,37 @@ flowchart LR
 
 | リソース | URL | 内容 |
 |---------|-----|------|
-| **CNCF Landscape** | landscape.cncf.io | クラウドネイティブツールの全体マップ |
-| **DevOps Roadmap** | roadmap.sh/devops | インタラクティブな学習ロードマップ |
-| **KillerCoda** | killercoda.com | ブラウザで K8s ハンズオン |
-| **Terraform Learn** | developer.hashicorp.com/terraform | 公式チュートリアル |
+| **CNCF Landscape** | [https://landscape.cncf.io](https://landscape.cncf.io) | クラウドネイティブツールの全体マップ |
+| **DevOps Roadmap** | [https://roadmap.sh/devops](https://roadmap.sh/devops) | インタラクティブな学習ロードマップ |
+| **KillerCoda** | [https://killercoda.com](https://killercoda.com) | ブラウザで K8s ハンズオン |
+| **Terraform Learn** | [https://developer.hashicorp.com/terraform](https://developer.hashicorp.com/terraform) | 公式チュートリアル |
 
 ---
 
 ## まとめ：2026 年の DevOps エンジニアに必要なもの
 
 ```mermaid
-mindmap
-  root((DevOps<br/>2026))
-    コンテナ
-      Docker
-      Kubernetes
-    CI/CD
-      GitHub Actions
-      テスト自動化
-    IaC
-      Terraform
-      GitOps
-    監視
-      Prometheus
-      Grafana + Loki
-    セキュリティ
-      DevSecOps
-      シフトレフト
-      Supply Chain
-    AI / ML
-      MLOps
-      AIOps
-      LLM Infra
-    設計
-      システム設計
-      DR
-      カオスエンジニアリング
-    ソフトスキル
-      Platform Thinking
-      Developer Experience
+flowchart TB
+    Core["DevOps 2026"]
+
+    Core --> Container["コンテナ<br/>Docker / K8s"]
+    Core --> CICD["CI/CD<br/>GitHub Actions"]
+    Core --> Infra["IaC<br/>Terraform / GitOps"]
+    Core --> Obs["監視<br/>Prometheus /<br/>Grafana + Loki"]
+    Core --> Sec["セキュリティ<br/>DevSecOps /<br/>Supply Chain"]
+    Core --> AI["AI / ML<br/>MLOps / AIOps /<br/>LLM Infra"]
+    Core --> Design["設計<br/>DR / カオス<br/>エンジニアリング"]
+    Core --> Soft["ソフトスキル<br/>Platform Thinking /<br/>Developer Experience"]
+
+    style Core fill:#2196F3,color:#fff
+    style Container fill:#4CAF50,color:#fff
+    style CICD fill:#4CAF50,color:#fff
+    style Infra fill:#4CAF50,color:#fff
+    style Obs fill:#FF9800,color:#fff
+    style Sec fill:#F44336,color:#fff
+    style AI fill:#9C27B0,color:#fff
+    style Design fill:#9C27B0,color:#fff
+    style Soft fill:#607D8B,color:#fff
 ```
 
 > **DevOps で止まるな。** MLOps、AIOps、AI インフラ — そこに仕事、報酬、そして未来がある。

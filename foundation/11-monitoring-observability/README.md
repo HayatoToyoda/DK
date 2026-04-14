@@ -1,4 +1,8 @@
-# 監視と可観測性 — Prometheus + Grafana + Loki
+# 11. 監視と可観測性 — Prometheus + Grafana + Loki
+
+> ⏱ 所要時間目安: 3〜4 時間
+>
+> **本章のスコープ**: メトリクス（Prometheus）とログ（Loki）の基礎を中心に扱います。トレース（Jaeger / Tempo）は概念を紹介しますが、ハンズオンは別途学習してください。
 
 ## この章で学ぶこと
 
@@ -76,7 +80,7 @@ flowchart LR
         DD4["月額数十万〜<br/>数百万円"]
     end
 
-    subgraph LokiGrafana["Loki + Grafana + Prometheus"]
+    subgraph LokiGrafana["OSS スタック"]
         LG1["OSS で無料"]
         LG2["K8s と親和性が高い"]
         LG3["カスタマイズ自由"]
@@ -95,7 +99,7 @@ flowchart LR
 | **学習価値** | 操作を覚えるだけ | 監視の仕組みそのものを理解できる |
 | **ベンダーロック** | あり | なし |
 
-> Datadog は優れた SaaS ですが、K8s 環境では Loki + Grafana + Prometheus の組み合わせが **柔軟性・コスト・学習価値** の全てで優位です。
+> Datadog は優れた SaaS であり、導入の手軽さでは勝ります。一方、K8s 環境での **柔軟性・ライセンスコスト・学習価値** では OSS スタックが優位です。ただし OSS の自前運用には **インフラ費用と運用の手間** がかかるため、チームの規模やスキルに応じて選択してください。
 
 ---
 
@@ -140,7 +144,7 @@ histogram_quantile(0.99, rate(http_request_duration_seconds_bucket[5m]))
 |---------|------|-----------|
 | **レイテンシ** | リクエストの応答時間 | `histogram_quantile(0.99, ...)` |
 | **トラフィック** | リクエスト量 | `rate(http_requests_total[5m])` |
-| **エラー** | 失敗したリクエストの割合 | `rate(http_requests_total{status="500"}[5m])` |
+| **エラー** | 失敗したリクエストの割合 | `rate(http_requests_total{status=~"5.."}[5m])` |
 | **サチュレーション** | リソースの飽和度 | `node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes` |
 
 ---
@@ -193,13 +197,23 @@ helm install monitoring prometheus-community/kube-prometheus-stack \
 
 ### Step 3: Loki のインストール
 
+> `loki-stack` は非推奨になりつつあります。2026 年現在は `grafana/loki` + `grafana/alloy`（旧 promtail の後継）が推奨ですが、学習目的では以下の簡易構成で十分です。
+
 ```bash
 helm repo add grafana https://grafana.github.io/helm-charts
 
-helm install loki grafana/loki-stack \
+# 学習用の簡易構成（シングルバイナリモード）
+helm install loki grafana/loki \
   --namespace monitoring \
-  --set promtail.enabled=true \
-  --set loki.persistence.enabled=false
+  --set deploymentMode=SingleBinary \
+  --set singleBinary.replicas=1 \
+  --set loki.auth_enabled=false \
+  --set loki.commonConfig.replication_factor=1 \
+  --set loki.storage.type=filesystem
+
+# ログ収集エージェント
+helm install alloy grafana/alloy \
+  --namespace monitoring
 ```
 
 ### Step 4: Grafana にアクセス

@@ -1,4 +1,6 @@
-# DevOps ロードマップ 2026
+# 07. DevOps ロードマップ 2026
+
+> ⏱ 所要時間目安: 1〜2 時間（読み物中心）
 
 Docker と Kubernetes の基礎を学んだあなたは、すでに DevOps の核となるコンテナ技術を習得しています。
 このセクションでは、2026 年の現場で **実際に求められる DevOps スキルセット** を体系的に学びます。
@@ -46,7 +48,8 @@ flowchart TB
     IaC --> Monitor
     GitOps --> Monitor
 
-    Monitor --> Security["DevSecOps<br/>シフトレフト<br/>セキュリティ"]
+    CI --> Security["DevSecOps<br/>シフトレフト<br/>セキュリティ"]
+    Monitor ~~~ Security
 
     Security --> Platform["Platform Engineering<br/>システム設計<br/>DR / カオスエンジニアリング"]
 
@@ -68,19 +71,31 @@ flowchart TB
 
 ### 推奨順序
 
-| 順番 | 章 | 内容 | 前提 |
-|:---:|-----|------|------|
-| 1 | [08 - CI/CD](../08-ci-cd/) | GitHub Actions でパイプライン構築 | foundation 01-06 完了 |
-| 2 | [09 - IaC (Terraform)](../09-iac-terraform/) | Terraform でインフラをコード管理 | 08 完了推奨 |
-| 3 | [10 - GitOps](../10-gitops/) | ArgoCD でクラスタへの自動デプロイ | 08, 09 完了推奨 |
-| 4 | [11 - 監視と可観測性](../11-monitoring-observability/) | Loki + Grafana + Prometheus | 10 完了推奨 |
-| 5 | [12 - DevSecOps](../12-devsecops/) | セキュリティのシフトレフト | 08 完了推奨 |
-| 6 | [13 - MLOps / AIOps](../13-mlops-aiops/) | AI 時代のインフラ運用 | 全章完了推奨 |
+| 順番 | 章 | 内容 | 最小成果物 | 前提 |
+|:---:|-----|------|-----------|------|
+| 1 | [08 - CI/CD](../08-ci-cd/) | GitHub Actions でパイプライン構築 | PR で自動テストが緑になる | foundation 01-06 完了 |
+| 2 | [09 - IaC (Terraform)](../09-iac-terraform/) | Terraform でインフラをコード管理 | `terraform apply` でコンテナが起動 | 08 完了推奨 |
+| 3 | [10 - GitOps](../10-gitops/) | ArgoCD でクラスタへの自動デプロイ | Git push で K8s に自動反映 | 08, 09 完了推奨 |
+| 4 | [11 - 監視と可観測性](../11-monitoring-observability/) | Prometheus + Grafana + Loki | Grafana ダッシュボードでメトリクス可視化 | 10 完了推奨 |
+| 5 | [12 - DevSecOps](../12-devsecops/) | セキュリティのシフトレフト | CI で脆弱性スキャンが動く | 08 完了推奨 |
+| 6 | [13 - MLOps / AIOps](../13-mlops-aiops/) | AI 時代のインフラ運用 | キャリアパスと次の学習計画を立てる | 全章完了推奨 |
 
 ### 前提知識
 
 - **必須**: Docker & Kubernetes の基礎（foundation 01-06 完了）
-- **推奨**: Linux の基本操作、Git の基本操作、Python の基本文法
+- **推奨**: Linux の基本操作、Git の基本操作（fork / PR の流れ）、Python の基本文法
+
+> Python は 08 のテスト実行、09 の自動化、12 の checkov など各章で登場します。基本文法に不安がある場合は、公式チュートリアル（[docs.python.org](https://docs.python.org/ja/3/tutorial/)）を先に一読してください。
+
+### 並行して押さえたい基礎知識
+
+DevOps の各章を進める中で、以下の知識があるとスムーズです。既存の章では深くカバーしませんが、必要に応じて学んでください。
+
+| トピック | なぜ必要か | 参考リソース |
+|---------|-----------|------------|
+| **ネットワーク基礎**（DNS / ロードバランサ / TLS） | Ingress、サービスメッシュ、監視アラートの理解に直結 | [roadmap.sh/devops](https://roadmap.sh/devops) |
+| **クラウド基礎**（VPC / サブネット / IAM） | Terraform や DR の章で頻出する語彙 | 各クラウドの無料チュートリアル |
+| **OpenTelemetry** | メトリクス / ログ / トレースの計装標準 | [opentelemetry.io](https://opentelemetry.io/) |
 
 ### 各章の学習時間の目安
 
@@ -95,12 +110,12 @@ flowchart TB
 
 | カテゴリ | 選定技術 | 選定理由 |
 |---------|---------|---------|
-| CI/CD | **GitHub Actions** | リポジトリと統合、セキュリティスキャン内蔵、Jenkins からの移行が加速 |
+| CI/CD | **GitHub Actions** | リポジトリと統合、セキュリティ機能が充実、Jenkins からの移行が加速中 |
 | IaC | **Terraform** | マルチクラウド対応、一度覚えればどこでも使える、圧倒的なプロバイダ数 |
 | GitOps | **ArgoCD** | K8s ネイティブ、UI あり、学習コスト低、Flux と並ぶデファクト |
-| 監視 | **Loki + Grafana + Prometheus** | OSS でコスト最適、K8s との親和性、Datadog 比で柔軟性とコスト優位 |
-| 言語 | **Python** | DevOps ツールの 99% が対応、AI/ML ツールの標準言語 |
-| セキュリティ | **Trivy / Snyk / GitHub Advanced Security** | コンテナ・IaC・コード全方位スキャン |
+| 監視 | **Loki + Grafana + Prometheus** | OSS でライセンス費用を抑えやすい、K8s との親和性が高い |
+| 言語 | **Python** | 自動化スクリプト・クラウド SDK・AI/ML 周りで採用例が非常に多い |
+| セキュリティ | **Trivy / Snyk** | コンテナ・IaC・コード全方位スキャン（GitHub Advanced Security は組織ライセンス依存） |
 
 ```mermaid
 flowchart LR
@@ -136,6 +151,8 @@ flowchart LR
 | **設計** | アーキテクチャレビュー、DR 計画の検証、コスト最適化 |
 
 > AI を「ちょっと便利な検索エンジン」ではなく、**常に隣にいるシニアエンジニア**として使いこなすエンジニアが、他の全員を追い越す。
+
+AI は必須ではありませんが、**強く推奨** します。使わなくても学べますが、使えば学習速度が桁違いに上がります。
 
 ---
 

@@ -1,4 +1,6 @@
-# GitOps — ArgoCD / Flux
+# 10. GitOps — ArgoCD / Flux
+
+> ⏱ 所要時間目安: 3〜4 時間
 
 ## この章で学ぶこと
 
@@ -62,7 +64,9 @@ flowchart TB
     style Pull fill:#e8f5e9
 ```
 
-GitOps は **Pull 型** を採用しています。ArgoCD がクラスタ内から Git を監視し、変更を検知して自動同期するため、CI に強力な権限を渡す必要がありません。
+GitOps は **Pull 型** を採用しています。ArgoCD がクラスタ内から Git を監視し、変更を検知して自動同期するため、CI からクラスタへの直接デプロイ権限（kubectl の認証情報など）を渡す必要がありません。
+
+> ただし、ArgoCD 自体が Git リポジトリやコンテナレジストリにアクセスするための認証情報は必要です。「秘密がゼロになる」わけではなく、**管理すべき認証情報の置き場所が整理される** というメリットです。
 
 ---
 
@@ -131,7 +135,9 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 
 ### Step 3: Application の定義
 
-`argocd-app.yaml`:
+`argocd-app.yaml` を作成します。`YOUR_USER` と `YOUR_REPO` は自分のリポジトリに置き換えてください。
+
+> **注意**: 最初は `syncPolicy.automated` をコメントアウトし、手動 Sync で動作を確認してから自動化に切り替えることを推奨します。`prune: true` は Git にないリソースを **自動削除** するため、意図しない削除を避けるためです。
 
 ```yaml
 apiVersion: argoproj.io/v1alpha1
@@ -148,16 +154,21 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: default
-  syncPolicy:
-    automated:
-      prune: true
-      selfHeal: true
-    syncOptions:
-      - CreateNamespace=true
+  # まずは手動 Sync で試し、慣れたら下のコメントを外す
+  # syncPolicy:
+  #   automated:
+  #     prune: true
+  #     selfHeal: true
+  #   syncOptions:
+  #     - CreateNamespace=true
 ```
 
 ```bash
 kubectl apply -f argocd-app.yaml
+
+# 手動で Sync を実行
+kubectl -n argocd get applications
+# ArgoCD UI からも Sync ボタンで実行可能
 ```
 
 ### Step 4: 同期の確認
@@ -197,10 +208,20 @@ flowchart LR
 ## ベストプラクティス
 
 1. **アプリコードとマニフェストのリポジトリを分離**: 変更頻度が異なるため
-2. **自動 Sync + SelfHeal を有効化**: 手動 Sync は本番で忘れるリスクがある
+2. **手動 Sync → 自動 Sync の段階的移行**: まず動作を理解してから自動化
 3. **Sync Wave で順序制御**: DB → API → Frontend の順にデプロイ
 4. **Notification で通知**: Slack / Teams に同期結果を通知
 5. **RBAC で権限制御**: 本番環境の Sync は承認者のみ
+6. **Git アクセスには Deploy Key（SSH）を使用**: HTTPS トークンより管理しやすい
+
+### 次に学ぶ語彙
+
+| 用語 | 説明 |
+|------|------|
+| **App of Apps** | 複数の Application を 1 つの Application で管理するパターン |
+| **ApplicationSet** | テンプレートから複数 Application を自動生成 |
+| **Helm + ArgoCD** | Helm Chart を ArgoCD 経由で GitOps 管理 |
+| **Kustomize** | 環境差分を overlay で管理 |
 
 ---
 

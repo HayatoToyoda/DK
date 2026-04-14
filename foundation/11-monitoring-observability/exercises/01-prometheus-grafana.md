@@ -26,8 +26,24 @@ node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes
 count(kube_pod_info)
 ```
 
+### 発展課題
+
+4. Grafana の Explore で **Loki** データソースを選択し、以下の LogQL を試す
+
+```logql
+{namespace="monitoring"}
+```
+
+### トラブルシューティング
+
+- kind でリソースが足りない場合: `--set prometheus.prometheusSpec.resources.requests.memory=256Mi` で制限を下げる
+- Grafana にアクセスできない場合: `kubectl get pods -n monitoring` で Pod の状態を確認
+
 ### 確認ポイント
 
 - [ ] Grafana にログインできるか
 - [ ] 組み込みダッシュボードが表示されるか
 - [ ] PromQL クエリの結果がグラフで表示されるか
+- [ ] （発展）Loki のログが Explore で表示されるか
+
+答えは [answers/](../answers/) で確認できます。

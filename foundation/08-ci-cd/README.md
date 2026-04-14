@@ -1,4 +1,6 @@
-# CI/CD パイプライン — GitHub Actions
+# 08. CI/CD パイプライン — GitHub Actions
+
+> ⏱ 所要時間目安: 3〜4 時間
 
 ## この章で学ぶこと
 
@@ -13,7 +15,13 @@
 ## CI/CD とは
 
 **CI（Continuous Integration）** は、コードの変更を頻繁にメインブランチに統合し、自動テストで品質を保証するプラクティスです。
-**CD（Continuous Delivery / Deployment）** は、テストを通過したコードを自動的に本番環境にデプロイするプラクティスです。
+
+**CD** には 2 つの意味があります：
+
+- **Continuous Delivery（継続的デリバリー）**: テストを通過したコードを、**承認後に** 本番環境にデプロイできる状態にする
+- **Continuous Deployment（継続的デプロイメント）**: テストを通過したコードを **自動的に** 本番環境にデプロイする
+
+多くの現場では Continuous Delivery（承認ゲートあり）から始め、成熟したら Continuous Deployment に移行します。
 
 ```mermaid
 flowchart LR
@@ -69,7 +77,7 @@ Jenkins はかつて CI/CD の王様でした。しかし 2026 年の現場で�
 
 - **サーバー管理不要**: GitHub がランナーを提供
 - **リポジトリと一体化**: `.github/workflows/` にワークフローを置くだけ
-- **セキュリティスキャン内蔵**: Dependabot, CodeQL, Secret scanning
+- **セキュリティ機能が充実**: Dependabot, Secret scanning は無料、CodeQL は公開リポジトリで無料（組織のプランにより利用範囲が異なる）
 - **豊富なエコシステム**: Marketplace に 20,000 以上のアクション
 
 ---
@@ -146,10 +154,11 @@ jobs:
       - name: Install dependencies
         run: |
           pip install -r application/webapp/phase1-local/requirements.txt
-          pip install pytest
 
-      - name: Run tests
-        run: pytest tests/ -v
+      - name: Verify app starts
+        run: |
+          cd application/webapp/phase1-local
+          python -c "from app import app; print('Import OK')"
 
   lint:
     runs-on: ubuntu-latest
@@ -165,7 +174,7 @@ jobs:
         run: pip install ruff
 
       - name: Run linter
-        run: ruff check .
+        run: ruff check application/
 
   build:
     needs: [test, lint]
@@ -201,11 +210,15 @@ flowchart LR
 - `test` と `lint` は **並列実行**（互いに依存しない）
 - `build` は `needs: [test, lint]` で **両方の成功後** に実行
 
-### Step 3: 高度なワークフロー要素
+### Step 3: 高度なワークフロー要素（発展）
+
+以下は基本を理解した後に段階的に学んでください。
 
 #### マトリクスビルド
 
 複数のバージョンやOSでテストを並列実行できます。
+
+> **注意**: macOS ランナーは無料枠の消費が大きく、待ち時間も長くなります。学習段階では `ubuntu-latest` のみで十分です。
 
 ```yaml
 jobs:
@@ -213,7 +226,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -304,6 +317,12 @@ gitGraph
 ## 演習問題
 
 [exercises/](./exercises/) ディレクトリに演習があります。
+
+---
+
+## 環境について
+
+本章のハンズオンは GitHub 上で実行されるため、ローカル環境への追加インストールは不要です。GitHub アカウントがあれば、公開リポジトリで無料で実行できます。
 
 ---
 

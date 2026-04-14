@@ -1,4 +1,6 @@
-# Infrastructure as Code — Terraform
+# 09. Infrastructure as Code — Terraform
+
+> ⏱ 所要時間目安: 3〜4 時間
 
 ## この章で学ぶこと
 
@@ -72,7 +74,7 @@ Terraform が選ばれる理由：
 - **Plan → Apply**: 変更を事前確認してから適用
 - **State 管理**: 現在のインフラ状態を正確に把握
 
-> Ansible は構成管理ツールとして長く使われてきましたが、2026 年の IaC は Terraform + GitOps + ArgoCD が標準です。Ansible は既存環境の設定変更には依然有用ですが、新規構築なら Terraform を第一選択にしましょう。
+> Ansible は構成管理ツールとして長く使われてきましたが、クラウド資源のプロビジョニングでは Terraform が主流になっています。Ansible は既存環境の設定変更やサーバー内のミドルウェア管理では依然有用です。新規構築なら Terraform を第一選択にし、必要に応じて Ansible を組み合わせましょう。
 
 ---
 
@@ -132,9 +134,11 @@ provider "aws" {
 
 ### リソース定義
 
+> 以下は **AWS の記法の例示** です。ハンズオンでは Docker プロバイダを使うので、AWS アカウントは不要です。
+
 ```hcl
 resource "aws_instance" "web" {
-  ami           = "ami-0abcdef1234567890"
+  ami           = "ami-xxxxxxxxxxxxxxxxx"  # リージョンに合った AMI ID に置換
   instance_type = "t3.micro"
 
   tags = {
@@ -176,7 +180,12 @@ output "instance_ip" {
 ### Step 1: Terraform のインストール
 
 ```bash
+# macOS（Homebrew）
 brew install terraform
+
+# Linux の場合は公式の手順を参照:
+# https://developer.hashicorp.com/terraform/install
+
 terraform version
 ```
 
@@ -318,7 +327,7 @@ module "eks" {
 2. **環境をディレクトリで分離**: `environments/dev/`, `environments/prod/`
 3. **モジュールで再利用**: 共通インフラをモジュール化
 4. **`terraform plan` を PR に表示**: GitHub Actions で自動化
-5. **Sensitive データは `sensitive = true`**: State への平文保存を防ぐ
+5. **秘密情報の保護**: 出力に `sensitive = true` を付けてマスクし、State へのアクセス制御（IAM / 暗号化）も忘れない。本格的な秘密管理には Vault などの外部ツールを検討
 6. **バージョン固定**: プロバイダとTerraform本体のバージョンを固定
 
 ---

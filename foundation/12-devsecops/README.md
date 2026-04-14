@@ -1,4 +1,8 @@
-# DevSecOps — セキュリティのシフトレフト
+# 12. DevSecOps — セキュリティのシフトレフト
+
+> ⏱ 所要時間目安: 2〜3 時間
+>
+> **本章の構成**: 必須（コンテナスキャン + シークレット管理）→ 推奨（IaC スキャン）→ 発展（Supply Chain Security）の順に学びます。
 
 ## この章で学ぶこと
 
@@ -74,7 +78,7 @@ flowchart TB
 | **コンテナスキャン** | イメージビルド後 | Trivy, Grype | OS パッケージの脆弱性、設定ミス |
 | **IaC スキャン** | Plan 前 | tfsec, checkov | セキュリティグループの過剰公開、暗号化の欠如 |
 | **DAST** | デプロイ後 | OWASP ZAP | 実行時の脆弱性 |
-| **シークレット検出** | コミット時 | GitLeaks, GitHub | ハードコードされたパスワード・API キー |
+| **シークレット検出** | コミット時 | Gitleaks, GitHub | ハードコードされたパスワード・API キー |
 
 ---
 
@@ -129,7 +133,7 @@ jobs:
         run: docker build -t todo-app:${{ github.sha }} application/webapp/phase2-docker/
 
       - name: Run Trivy
-        uses: aquasecurity/trivy-action@master
+        uses: aquasecurity/trivy-action@0.28.0  # バージョンを固定（@master は使わない）
         with:
           image-ref: todo-app:${{ github.sha }}
           severity: HIGH,CRITICAL
@@ -138,26 +142,34 @@ jobs:
 
 ---
 
-## IaC スキャン
+## 推奨: IaC スキャン
 
-### tfsec で Terraform コードをスキャン
+> Terraform は [09 章](../09-iac-terraform/) を修了していることが前提です。
+
+### Trivy で Terraform / K8s マニフェストをスキャン
+
+> `tfsec` は Trivy に統合・移行されました。2026 年現在は `trivy config` を使います。
 
 ```bash
-brew install tfsec
+# Terraform ディレクトリをスキャン
+trivy config .
 
-# Terraform ディレクトリでスキャン
-tfsec .
+# Kubernetes マニフェストをスキャン
+trivy config application/webapp/phase4-k8s/k8s/
+
+# Dockerfile をスキャン
+trivy config --file-patterns "dockerfile:Dockerfile" .
 ```
 
 検出例：
 
 ```
-Result: Security group allows ingress from 0.0.0.0/0 to port 22
-Severity: HIGH
-Resolution: Restrict SSH access to specific IP ranges
+Failures: 3 (HIGH: 2, CRITICAL: 1)
+  - Security group allows ingress from 0.0.0.0/0 to port 22
+  - Container running as root
 ```
 
-### checkov で幅広い IaC をスキャン
+### checkov で幅広い IaC をスキャン（代替ツール）
 
 ```bash
 pip install checkov
@@ -167,9 +179,6 @@ checkov -d .
 
 # Kubernetes マニフェスト
 checkov -d application/webapp/phase4-k8s/k8s/ --framework kubernetes
-
-# Dockerfile
-checkov --file Dockerfile --framework dockerfile
 ```
 
 ---
@@ -215,7 +224,7 @@ flowchart LR
 
 ---
 
-## Supply Chain Security
+## 発展: Supply Chain Security
 
 ### コンテナイメージの署名と検証
 
@@ -236,12 +245,17 @@ flowchart LR
 ```
 
 ```bash
-# Cosign でイメージに署名
+# 鍵ペアを生成（初回のみ）
+cosign generate-key-pair
+
+# イメージに署名
 cosign sign --key cosign.key myregistry.io/todo-app:v1
 
 # デプロイ前に検証
 cosign verify --key cosign.pub myregistry.io/todo-app:v1
 ```
+
+> 本番環境では、鍵ファイルの代わりに **OIDC（Keyless Signing）** を使う方法が主流になっています。GitHub Actions の OIDC トークンを使えば、鍵管理自体が不要になります。K8s 側では **Kyverno** や **OPA Gatekeeper** で署名検証をポリシーとして強制できます。
 
 ---
 
