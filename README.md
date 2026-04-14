@@ -30,6 +30,14 @@
 [foundation/06] k8s応用（ConfigMap / Secret / PersistentVolume）
      ↓
 [application/phase4] サンプルアプリをk8sにデプロイ
+     ↓
+[foundation/07] DevOps ロードマップ 2026（全体像の把握）
+[foundation/08] CI/CD（GitHub Actions でパイプライン構築）
+[foundation/09] IaC（Terraform でインフラをコード管理）
+[foundation/10] GitOps（ArgoCD でクラスタ自動同期）
+[foundation/11] 監視と可観測性（Prometheus + Grafana + Loki）
+[foundation/12] DevSecOps（セキュリティのシフトレフト）
+[foundation/13] MLOps / AIOps（AI 時代のインフラ運用）
 ```
 
 ---
@@ -47,7 +55,14 @@ DK/
 │   ├── 03-docker-compose/
 │   ├── 04-what-is-kubernetes/
 │   ├── 05-k8s-basics/
-│   └── 06-k8s-advanced/
+│   ├── 06-k8s-advanced/
+│   ├── 07-devops-roadmap/    # DevOps ロードマップ 2026
+│   ├── 08-ci-cd/             # CI/CD（GitHub Actions）
+│   ├── 09-iac-terraform/     # IaC（Terraform）
+│   ├── 10-gitops/            # GitOps（ArgoCD / Flux）
+│   ├── 11-monitoring-observability/  # 監視と可観測性
+│   ├── 12-devsecops/         # DevSecOps
+│   └── 13-mlops-aiops/       # MLOps / AIOps
 │
 └── application/       # 応用編（実アプリで学ぶ）
     └── webapp/        # Python Flask + PostgreSQL TODOアプリ
@@ -58,6 +73,8 @@ DK/
 ```
 
 各章の `README.md` にその章で学ぶことと手順が書かれています。`exercises/` で手を動かし、`answers/` で答え合わせができます。
+
+> **Docker & Kubernetes を学び終えたら、07 以降の DevOps セクションに進みましょう。** 2026 年のインフラエンジニアに求められる CI/CD、IaC、GitOps、監視、セキュリティ、MLOps までを体系的に学べます。
 
 ---
 
@@ -73,4 +90,3 @@ DK/
 - エラーメッセージをそのままコピーして調べる
 - `docker logs <コンテナ名>` / `kubectl describe pod <Pod名>` でログを確認する
 - わからないことはそのままにせず、「なぜそうなるか」まで調べることが上達の近道
-# DK
