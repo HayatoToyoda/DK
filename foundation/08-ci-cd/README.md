@@ -233,7 +233,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pytest tests/ -v
+      - run: python -m pytest -v  # テストディレクトリは自分のプロジェクトに合わせる
 ```
 
 #### シークレットの利用

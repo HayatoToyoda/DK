@@ -119,29 +119,29 @@ DevOps の各章を進める中で、以下の知識があるとスムーズで�
 
 ```mermaid
 flowchart LR
-    subgraph 2020["2020年の DevOps"]
+    subgraph era2020["2020年の DevOps"]
         J["Jenkins"] ~~~ A["Ansible"]
         A ~~~ N["Nagios"]
         N ~~~ DD["Datadog"]
     end
 
-    subgraph 2026["2026年の DevOps"]
+    subgraph era2026["2026年の DevOps"]
         GHA["GitHub Actions"] ~~~ TF["Terraform"]
         TF ~~~ Argo["ArgoCD"]
         Argo ~~~ LG["Loki + Grafana"]
     end
 
-    2020 -- "進化" --> 2026
+    era2020 -- "進化" --> era2026
 
-    style 2020 fill:#ffebee
-    style 2026 fill:#e8f5e9
+    style era2020 fill:#ffebee
+    style era2026 fill:#e8f5e9
 ```
 
 ---
 
 ## AI をフル活用せよ
 
-2026 年の DevOps エンジニアにとって、**AI は必須のコアツール** です。
+2026 年の DevOps エンジニアにとって、**AI は強力な武器** です。
 
 | 活用シーン | 具体例 |
 |-----------|--------|

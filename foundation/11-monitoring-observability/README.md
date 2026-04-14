@@ -180,7 +180,11 @@ count_over_time({namespace="production"} |= "error" [1h])
 ### Step 1: Helm のインストール
 
 ```bash
+# macOS
 brew install helm
+
+# Linux の場合は公式の手順を参照:
+# https://helm.sh/docs/intro/install/
 ```
 
 ### Step 2: kube-prometheus-stack のインストール
@@ -211,10 +215,13 @@ helm install loki grafana/loki \
   --set loki.commonConfig.replication_factor=1 \
   --set loki.storage.type=filesystem
 
-# ログ収集エージェント
-helm install alloy grafana/alloy \
-  --namespace monitoring
+# ログ収集エージェント（Loki へのログ転送設定が必要）
+# Alloy の設定は環境に応じたカスタマイズが必要です。
+# 学習目的では、まず Prometheus + Grafana でメトリクスを体験し、
+# ログ集約は Grafana UI の Explore から Loki を追加する形で段階的に進めてください。
 ```
+
+> **ログパイプラインの構築**: Loki へのログ転送を完全に設定するには、Alloy（旧 Promtail）の設定ファイルで転送先やラベル定義が必要です。本章ではメトリクスの基礎を優先し、ログ収集の詳細設定は発展課題として扱います。
 
 ### Step 4: Grafana にアクセス
 
